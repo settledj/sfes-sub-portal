@@ -25,6 +25,7 @@ export function AdminPortal({
   allowedUsers,
   onAddAllowedUser,
   onRemoveAllowedUser,
+  onSetAllowedUserPassword,
 }: {
   subs: Sub[];
   teachers: Teacher[];
@@ -38,8 +39,9 @@ export function AdminPortal({
   onReassign: (id: string, newSubId: number) => void;
   notifications: Notification[];
   allowedUsers: AllowedUserRow[];
-  onAddAllowedUser: (email: string, role: "teacher" | "substitute" | "admin") => Promise<void>;
+  onAddAllowedUser: (email: string, role: "teacher" | "substitute" | "admin", password: string) => Promise<void>;
   onRemoveAllowedUser: (id: string) => Promise<void>;
+  onSetAllowedUserPassword: (id: string, password: string) => Promise<void>;
 }) {
   const [tab, setTab] = useState<"bookings" | "people" | "notifications" | "new" | "access">("bookings");
   const [prefill, setPrefill] = useState<NewBookingPrefill | null>(null);
@@ -105,7 +107,7 @@ export function AdminPortal({
         <AdminNewBooking subs={subs} teachers={teachers} onCreate={onCreate} prefill={prefill} />
       )}
       {tab === "access" && (
-        <AdminAccess users={allowedUsers} onAdd={onAddAllowedUser} onRemove={onRemoveAllowedUser} />
+        <AdminAccess users={allowedUsers} onAdd={onAddAllowedUser} onRemove={onRemoveAllowedUser} onSetPassword={onSetAllowedUserPassword} />
       )}
     </div>
   );

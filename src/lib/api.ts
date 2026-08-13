@@ -98,6 +98,7 @@ export interface AllowedUserRow {
   id: string;
   email: string;
   role: "teacher" | "substitute" | "admin";
+  hasPassword: boolean;
   createdAt: string;
 }
 
@@ -105,10 +106,14 @@ export function fetchAllowedUsers() {
   return json<AllowedUserRow[]>(fetch("/api/allowed-users"));
 }
 
-export function addAllowedUser(email: string, role: "teacher" | "substitute" | "admin") {
-  return json<AllowedUserRow>(post("/api/allowed-users", { email, role }));
+export function addAllowedUser(email: string, role: "teacher" | "substitute" | "admin", password?: string) {
+  return json<AllowedUserRow>(post("/api/allowed-users", { email, role, password: password || undefined }));
 }
 
 export function removeAllowedUser(id: string) {
   return json<{ ok: true }>(fetch(`/api/allowed-users/${id}`, { method: "DELETE" }));
+}
+
+export function setAllowedUserPassword(id: string, password: string) {
+  return json<{ ok: true; hasPassword: boolean }>(patch(`/api/allowed-users/${id}`, { password }));
 }

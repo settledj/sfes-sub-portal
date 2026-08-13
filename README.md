@@ -2,28 +2,39 @@
 
 Next.js + TypeScript + Postgres port of the Claude.ai prototype (`sub-portal-prototype.jsx`) described in
 `SFES-Sub-Portal-Handoff.md`. Three role-based portals (Teacher, Substitute, Admin) sharing a booking
-model, with real magic-link authentication, an admin-managed access allowlist, and real email/SMS
+model, with real Google/password authentication, an admin-managed access allowlist, and real email/SMS
 notifications.
 
 ## Stack
 
 - **Next.js 16** (App Router, TypeScript, Tailwind v4)
 - **Prisma 6** + **PostgreSQL** (intended for **Supabase**) — see `prisma/schema.prisma`
-- **Auth.js v5** (`next-auth@beta`) with the Prisma adapter — magic-link (passwordless) sign-in for all
-  three roles, database sessions
-- **Resend** — magic-link emails and real notification emails
+- **Auth.js v5** (`next-auth@beta`) with the Prisma adapter — Google sign-in as the primary method,
+  username/password (Credentials provider) as a fallback for anyone without a Google account. JWT sessions
+  (required for the Credentials provider to work alongside Google).
+- **Resend** — real notification emails (not sign-in)
 - **Twilio** — real notification SMS
 - Plain `fetch` from client components to route handlers under `src/app/api/`
 
 ## How access control works
 
-1. **`AllowedUser`** table (email + role) is the approval list — only emails on it can sign in at all, and
-   the role they're granted determines which of `/teacher`, `/sub`, `/admin` they land on. Manage it from
-   Admin → Access.
+1. **`AllowedUser`** table (email + role, plus an optional `passwordHash`) is the approval list — only
+   emails on it can sign in at all, and the role they're granted determines which of `/teacher`, `/sub`,
+   `/admin` they land on. Manage it from Admin → Access.
 2. Being on the allowlist is separate from having a Teacher/Substitute/Admin roster record. Someone needs
    **both**: allowlisted (to sign in) and a matching-by-email roster row (so the app knows who they are —
    name, availability, etc.). The role pages show a clear message if only one of the two exists.
-3. Sign-in is magic-link only (no Google SSO in this pass — see "Deviations" below).
+3. **Sign-in**: "Sign in with Google" works for anyone whose email is a Google account (Google Workspace
+   staff *and* any substitute using a personal Gmail) — no password needed, and it's gated by the same
+   allowlist check. For people without a Google account, there are two ways to get them a password:
+   - **Self-service (default)**: once an admin adds their email to the allowlist, they visit `/signin` →
+     "Create a password" → enter their email and choose a password themselves. Works once per email — see
+     `src/lib/passwordSetup.ts` for the security tradeoff this makes (no email verification step, a
+     deliberate choice for this prototype stage) and why it's still safe against account takeover
+     afterward (can't overwrite a password that's already set).
+   - **Admin-set**: an admin can also set/reset someone's password directly from Admin → Access → the key
+     icon next to their row — useful for resetting a forgotten password, since there's no self-service
+     "forgot password" flow yet.
 4. Every mutating API route checks the caller's role via `src/lib/authz.ts`; routes that touch a specific
    person's own data (sub availability/profile, teacher photo) also check that the signed-in email matches
    that record.
@@ -46,16 +57,31 @@ notifications.
      pooler can't run migrations at all (the command just hangs) — this is why both are needed.
 4. Paste both into `.env`.
 
-### 2. Resend (email)
+### 2. Google OAuth (sign-in)
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) → create a project (or use an
+   existing one) → **APIs & Services** → **Credentials**.
+2. **Configure consent screen** if prompted — "External" user type is fine for testing; you don't need to
+   submit it for verification to use it with a small list of testers/your own org.
+3. **Create Credentials** → **OAuth client ID** → Application type **Web application**.
+4. Under **Authorized redirect URIs**, add:
+   - `http://localhost:3001/api/auth/callback/google` (for local dev — adjust the port if different)
+   - `https://your-production-domain.com/api/auth/callback/google` (once deployed)
+5. Copy the **Client ID** and **Client secret** into `.env` as `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`.
+
+No domain restriction is applied — any Google account can attempt sign-in, but the `AllowedUser` allowlist
+check still gates actual access, so this is safe.
+
+### 3. Resend (real notification emails — not sign-in)
 
 1. Create a free account at [resend.com](https://resend.com).
 2. Create an API key under **API Keys** → copy it into `.env` as `RESEND_API_KEY`.
 3. For real deliverability (not just to your own inbox), verify a sending domain under **Domains**, then
    set `RESEND_FROM_EMAIL` to an address on it (e.g. `no-reply@yourdomain.org`). Until you do that, leave
-   `RESEND_FROM_EMAIL` blank — Resend's shared test sender only delivers to the email you signed up with,
-   which is fine for solo testing but not for other admins.
+   `RESEND_FROM_EMAIL` blank — Resend's shared test sender only delivers to the email you signed up with.
+   This only affects the "You've been booked" / request notification emails now, not sign-in.
 
-### 3. Twilio (SMS) — optional, skip if you don't need SMS yet
+### 4. Twilio (SMS) — optional, skip if you don't need SMS yet
 
 1. Create an account at [twilio.com](https://twilio.com).
 2. From the [console dashboard](https://console.twilio.com), copy your **Account SID** and **Auth Token**
@@ -66,7 +92,7 @@ notifications.
 
 Leaving the Twilio vars blank simply skips SMS sending; email and the in-app notification log still work.
 
-### 4. Auth secret
+### 5. Auth secret
 
 ```bash
 cp .env.example .env
@@ -78,7 +104,7 @@ openssl rand -base64 32
 (Don't use `npx auth secret` — that resolves to an unrelated npm package called `auth` and writes the
 wrong variable name, `BETTER_AUTH_SECRET`.)
 
-### 5. Roster data (contains real staff PII — see below)
+### 6. Roster data (contains real staff PII — see below)
 
 ```bash
 cp prisma/roster.local.example.ts prisma/roster.local.ts
@@ -86,7 +112,7 @@ cp prisma/roster.local.example.ts prisma/roster.local.ts
 Either fill in real names/phones/emails, or leave the fake sample data for a demo-safe seed. This file is
 gitignored on purpose.
 
-### 6. Install, migrate, seed, run
+### 7. Install, migrate, seed, run
 
 ```bash
 npm install
@@ -95,8 +121,8 @@ npm run db:seed
 npm run dev
 ```
 
-Open http://localhost:3000 → you'll be redirected to `/signin`. Sign in with an email you've added to the
-allowlist (see "Bootstrapping the first admin" below) — you'll get a real email with a sign-in link.
+Open http://localhost:3000 → you'll be redirected to `/signin`. Sign in with Google (if your email is on the
+allowlist — see "Bootstrapping the first admin" below), or email + password if an admin set one for you.
 
 ### Bootstrapping the first admin
 
@@ -107,17 +133,20 @@ has to be added directly, since there's no one logged in yet to use that UI:
 npm run db:bootstrap-admin -- you@example.com "Your Name" "(555) 555-5555"
 ```
 This adds you to both the `allowed_users` allowlist (role `admin`) and the `admins` table in one step. Phone
-is optional. Safe to re-run any time — it upserts.
+is optional. Safe to re-run any time — it upserts. Then just sign in with Google using that same email (or
+set yourself a password via `npm run db:set-role` / Prisma Studio if you'd rather use a password).
 
 ### Testing sign-in as a role that isn't yours
 
+If everyone testing has their own Google account, just add each real email to Admin → Access with the right
+role — no special handling needed. The workaround below is only for the password-fallback path, and only
+matters once you're also sending **real notification emails** via Resend:
+
 **Resend's sandbox mode only delivers to the exact email address you signed up to Resend with** — not other
 addresses, and not `+tag` variants of it (Gmail treats `you+teacher@gmail.com` as the same inbox, but
-Resend's sandbox check doesn't). You'll hit a `Configuration` error trying to sign in as anyone else until
-you verify a sending domain in Resend (**Domains** → add yours → set `RESEND_FROM_EMAIL`).
-
-Until then, to test a role that belongs to a different real email, temporarily point that person's record at
-your own deliverable inbox, sign in, then switch it back:
+Resend's sandbox check doesn't). This affects notification emails (booking confirmations, etc.), not sign-in
+anymore — but if you want to see what a notification email to a different test identity looks like before
+verifying a domain in Resend, the same workaround applies:
 
 ```bash
 # Change which role your one deliverable email signs in as:
@@ -131,19 +160,13 @@ npm run db:swap-sub-email -- back  # your deliverable inbox -> their-real-email
 (`db:swap-sub-email` has the real/test emails hardcoded in `prisma/tempSwapSubEmail.ts` — edit those
 constants for a different substitute.)
 
-Also worth knowing: a magic-link callback occasionally lands back on `/signin` instead of the intended
-portal — this is a benign redirect quirk with the Resend/Email provider's `redirectTo` handling, not a
-failed login. `/signin` now auto-forwards signed-in visitors to their portal, but if you land on Auth.js's
-own `/api/auth/error?error=Verification` page (not our `/signin` page), that means the link was already
-used — just navigate straight to `/teacher`, `/sub`, or `/admin` to check whether the first attempt actually
-succeeded before requesting a new link.
-
 ## What's real vs. what's still a stand-in
 
 Compared to Section 4 of the handoff doc's "Known gaps":
 
-1. ✅ **Real auth** — done, but as magic-link for all three roles rather than the doc's suggested
-   Google Workspace SSO + magic-link split (see "Deviations" below).
+1. ✅ **Real auth** — done: Google sign-in as primary (covers Workspace staff and any sub with a personal
+   Gmail account, matching the doc's intent more directly than originally planned — see "Deviations" below),
+   password fallback for everyone else.
 2. ✅ **Real email/SMS delivery** — done via Resend + Twilio, gated behind env vars.
 3. ✅ **Real database** — Postgres via Supabase.
 4. ❌ **No Microsoft Graph / Outlook sync** yet.
@@ -162,11 +185,12 @@ handoff doc for why.
 
 ## Deviations from the handoff doc / prototype worth knowing about
 
-- **Magic link for everyone, not Google SSO for staff.** The doc recommended Google Workspace SSO
-  (domain-restricted) for Teachers/Admins since they have `@stfrancishouston.org` accounts, with magic-link
-  only for Substitutes (personal emails). This build uses magic-link for all three to avoid standing up a
-  Google Cloud OAuth app in this pass. Swapping in Google SSO later means adding a Google provider to
-  `src/lib/auth.ts` — the allowlist/session/role logic doesn't need to change.
+- **Undifferentiated Google sign-in, not a Workspace-vs-personal split.** The doc recommended Google
+  Workspace SSO (domain-restricted) for Teachers/Admins and magic-link only for Substitutes. This build
+  uses the same "Sign in with Google" flow for everyone instead — it isn't restricted to the
+  `@stfrancishouston.org` domain, since plenty of subs use personal Gmail too, and unrestricted Google
+  sign-in is still fully gated by the `AllowedUser` allowlist. People without any Google account (the
+  doc's original reason for a separate sub-facing flow) use email + password instead, set by an admin.
 - **Separate allowlist, not roster membership.** An explicit choice: being in `AllowedUser` is what lets
   someone sign in; being in `Teacher`/`Substitute`/`Admin` is what gives them a profile. The two are
   managed independently, which is more flexible but means an admin must remember to do both when onboarding

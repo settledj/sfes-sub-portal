@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, UserPlus } from "lucide-react";
+import { Trash2, UserPlus, KeyRound } from "lucide-react";
 import { C } from "@/lib/constants";
 
 export interface AllowedUserRow {
   id: string;
   email: string;
   role: "teacher" | "substitute" | "admin";
+  hasPassword: boolean;
   createdAt: string;
 }
 
@@ -21,24 +22,37 @@ export function AdminAccess({
   users,
   onAdd,
   onRemove,
+  onSetPassword,
 }: {
   users: AllowedUserRow[];
-  onAdd: (email: string, role: "teacher" | "substitute" | "admin") => Promise<void>;
+  onAdd: (email: string, role: "teacher" | "substitute" | "admin", password: string) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
+  onSetPassword: (id: string, password: string) => Promise<void>;
 }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"teacher" | "substitute" | "admin">("teacher");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [passwordRowId, setPasswordRowId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const handleAdd = async () => {
     if (!email.trim()) return;
     setError("");
     try {
-      await onAdd(email.trim().toLowerCase(), role);
+      await onAdd(email.trim().toLowerCase(), role, password.trim());
       setEmail("");
+      setPassword("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't add that email.");
     }
+  };
+
+  const submitPassword = async (id: string) => {
+    if (!newPassword.trim()) return;
+    await onSetPassword(id, newPassword.trim());
+    setPasswordRowId(null);
+    setNewPassword("");
   };
 
   return (
@@ -49,17 +63,18 @@ export function AdminAccess({
         </p>
         <p className="text-sm mb-4" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
           Only emails on this list can sign in. Adding someone here does not create their Teacher/Substitute
-          profile — do that separately so their name, availability, etc. show up correctly.
+          profile — do that separately so their name, availability, etc. show up correctly. Most people can
+          just sign in with Google — only set a password here for someone without a Google account.
         </p>
 
         {error && <p className="text-xs mb-3" style={{ color: C.red, fontFamily: "PT Serif, serif" }}>{error}</p>}
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 mb-2">
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             type="email"
-            placeholder="name@stfrancishouston.org"
+            placeholder="name@example.com"
             className="flex-1 text-sm rounded-lg border p-2.5 outline-none"
             style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
           />
@@ -73,6 +88,16 @@ export function AdminAccess({
             <option value="substitute">Substitute</option>
             <option value="admin">Admin</option>
           </select>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="text"
+            placeholder="Password (optional — only if no Google account)"
+            className="flex-1 text-sm rounded-lg border p-2.5 outline-none"
+            style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
+          />
           <button
             onClick={handleAdd}
             className="flex items-center justify-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-lg text-white whitespace-nowrap"
@@ -91,21 +116,53 @@ export function AdminAccess({
         <div className="flex flex-col gap-2 max-w-xl">
           {users.map((u) => {
             const meta = roleMeta[u.role];
+            const editingPassword = passwordRowId === u.id;
             return (
-              <div key={u.id} className="rounded-xl border bg-white p-3.5 flex items-center gap-3" style={{ borderColor: "#E3E5EA" }}>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>{u.email}</p>
+              <div key={u.id} className="rounded-xl border bg-white p-3.5" style={{ borderColor: "#E3E5EA" }}>
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>{u.email}</p>
+                    <p className="text-[11px]" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+                      {u.hasPassword ? "Password set" : "Google sign-in only"}
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap" style={{ backgroundColor: meta.bg, color: meta.color, fontFamily: "Barlow, sans-serif" }}>
+                    {meta.label}
+                  </span>
+                  <button
+                    onClick={() => { setPasswordRowId(editingPassword ? null : u.id); setNewPassword(""); }}
+                    className="p-1.5 rounded-md hover:bg-gray-100"
+                    title={u.hasPassword ? "Reset password" : "Set password"}
+                  >
+                    <KeyRound size={14} color={C.navy} />
+                  </button>
+                  <button
+                    onClick={() => onRemove(u.id)}
+                    className="p-1.5 rounded-md hover:bg-gray-100"
+                    title="Revoke access"
+                  >
+                    <Trash2 size={14} color={C.red} />
+                  </button>
                 </div>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap" style={{ backgroundColor: meta.bg, color: meta.color, fontFamily: "Barlow, sans-serif" }}>
-                  {meta.label}
-                </span>
-                <button
-                  onClick={() => onRemove(u.id)}
-                  className="p-1.5 rounded-md hover:bg-gray-100"
-                  title="Revoke access"
-                >
-                  <Trash2 size={14} color={C.red} />
-                </button>
+                {editingPassword && (
+                  <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: "1px solid #E3E5EA" }}>
+                    <input
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      type="text"
+                      placeholder="New password"
+                      className="flex-1 text-sm rounded-lg border p-2 outline-none"
+                      style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
+                    />
+                    <button
+                      onClick={() => submitPassword(u.id)}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-md text-white"
+                      style={{ backgroundColor: C.navy, fontFamily: "Barlow, sans-serif" }}
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}

@@ -94,13 +94,17 @@ export function AdminPortalClient({ adminName }: { adminName: string }) {
         }}
         notifications={state.notifications}
         allowedUsers={allowedUsers}
-        onAddAllowedUser={async (email, role) => {
-          const created = await api.addAllowedUser(email, role);
+        onAddAllowedUser={async (email, role, password) => {
+          const created = await api.addAllowedUser(email, role, password);
           setAllowedUsers((prev) => [created, ...prev]);
         }}
         onRemoveAllowedUser={async (id) => {
           await api.removeAllowedUser(id);
           setAllowedUsers((prev) => prev.filter((u) => u.id !== id));
+        }}
+        onSetAllowedUserPassword={async (id, password) => {
+          const result = await api.setAllowedUserPassword(id, password);
+          setAllowedUsers((prev) => prev.map((u) => (u.id === id ? { ...u, hasPassword: result.hasPassword } : u)));
         }}
       />
     </div>

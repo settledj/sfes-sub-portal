@@ -118,10 +118,13 @@ enum AllowedRole {
 // by design (an admin can grant portal access separately from roster membership).
 // Checked in the Auth.js signIn callback in src/lib/auth.ts.
 model AllowedUser {
-  id        String      @id @default(cuid())
-  email     String      @unique
-  role      AllowedRole
-  createdAt DateTime    @default(now())
+  id           String      @id @default(cuid())
+  email        String      @unique
+  role         AllowedRole
+  // Only set for people without a Google account (password-fallback sign-in).
+  // Google-auth users have this null — see src/lib/auth.ts's Credentials provider.
+  passwordHash String?
+  createdAt    DateTime    @default(now())
 
   @@map("allowed_users")
 }
@@ -130,7 +133,9 @@ model AllowedUser {
 // @auth/prisma-adapter expects these exact model names (User/Account/Session/
 // VerificationToken) — it doesn't support renaming them. Table names are still
 // namespaced via @@map so they read clearly in the database itself. Session
-// strategy is "database". These are Auth.js's own identity records, distinct
+// strategy is "jwt" (required for the Credentials/password provider to work
+// alongside Google) — the adapter is still used so Google sign-ins get a
+// linked User/Account record. These are Auth.js's own identity records, distinct
 // from the app-level Teacher/Substitute/Admin rows they're matched to by email.
 model User {
   id            String    @id @default(cuid())
