@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sfes
+      POSTGRES_PASSWORD: sfes
+      POSTGRES_DB: sub_portal
+    ports:
+      - "5432:5432"
+    volumes:
+      - sfes_sub_portal_pgdata:/var/lib/postgresql/data
+
+volumes:
+  sfes_sub_portal_pgdata:

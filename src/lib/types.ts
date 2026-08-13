@@ -1,0 +1,76 @@
+export type AvailabilityMap = Record<string, "unavailable" | "booked">;
+
+export interface Sub {
+  id: number;
+  name: string;
+  initials: string;
+  phone: string;
+  email: string;
+  division: string[];
+  subjects: string[];
+  additionalInfo: string;
+  bio: string;
+  hrApproved: boolean;
+  needsApproval: boolean;
+  preferred: boolean;
+  accent: string;
+  photo: string | null;
+  availability: AvailabilityMap;
+}
+
+export interface Teacher {
+  id: number;
+  name: string;
+  subject: string;
+  room: string;
+  email: string;
+  phone: string;
+  initials: string;
+  accent: string;
+  photo: string | null;
+}
+
+export interface Admin {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export type RequestStatus = "pending" | "accepted" | "declined" | "cancelled";
+export type RequestSource = "teacher" | "admin";
+
+export interface Booking {
+  id: string;
+  subId: number;
+  teacherId: number;
+  teacherName: string;
+  dk: string;
+  subject: string;
+  grade: string;
+  notes: string;
+  lessonPlan: string;
+  schedule: string;
+  attendance: string;
+  status: RequestStatus;
+  source: RequestSource;
+}
+
+export interface Notification {
+  id: string;
+  timestamp: number;
+  event: string;
+  toName: string;
+  toEmail: string | null;
+  toPhone: string | null;
+  subject: string;
+  body: string;
+}
+
+export interface AppState {
+  subs: Sub[];
+  teachers: Teacher[];
+  admins: Admin[];
+  requests: Booking[];
+  notifications: Notification[];
+}

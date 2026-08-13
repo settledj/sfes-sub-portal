@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# real staff PII — see prisma/roster.local.example.ts and README.md
+prisma/roster.local.ts
+src/lib/photos.local.ts
+
 # vercel
 .vercel
 

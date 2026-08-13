@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// DATABASE_URL (pooled, port 6543) is used at runtime for app queries.
+// DIRECT_URL (unpooled, port 5432) is used only by `prisma migrate` — the
+// transaction pooler doesn't support the session-level features migrations need.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// See Section 3 of the handoff doc for the original prototype data model.
+// `availability` stays a JSON exception-map (dateKey -> "unavailable" | "booked")
+// to match the prototype's "default available" model described there.
+model Substitute {
+  id             Int      @id @default(autoincrement())
+  name           String
+  initials       String
+  phone          String
+  email          String   @unique
+  division       String[]
+  subjects       String[]
+  additionalInfo String   @default("")
+  bio            String   @default("")
+  hrApproved     Boolean  @default(false)
+  needsApproval  Boolean  @default(false)
+  preferred      Boolean  @default(false)
+  accent         String   @default("#1B2A53")
+  photo          String?
+  availability   Json     @default("{}")
+  requests       Request[]
+
+  @@map("substitutes")
+}
+
+model Teacher {
+  id       Int       @id @default(autoincrement())
+  name     String
+  subject  String
+  room     String    @default("")
+  email    String    @unique
+  phone    String    @default("")
+  initials String
+  accent   String    @default("#1B2A53")
+  photo    String?
+  requests Request[]
+
+  @@map("teachers")
+}
+
+model Admin {
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
+  phone String @default("")
+
+  @@map("admins")
+}
+
+enum RequestStatus {
+  pending
+  accepted
+  declined
+  cancelled
+}
+
+enum RequestSource {
+  teacher
+  admin
+}
+
+model Request {
+  id          String        @id @default(cuid())
+  subId       Int
+  sub         Substitute    @relation(fields: [subId], references: [id])
+  teacherId   Int
+  teacher     Teacher       @relation(fields: [teacherId], references: [id])
+  teacherName String
+  dk          String
+  subject     String        @default("")
+  grade       String        @default("")
+  notes       String        @default("")
+  lessonPlan  String        @default("")
+  schedule    String        @default("")
+  attendance  String        @default("")
+  status      RequestStatus @default(pending)
+  source      RequestSource @default(teacher)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("requests")
+}
+
+// Real delivery, gated on RESEND_API_KEY / TWILIO_* env vars (see src/lib/notify.ts).
+// This log is kept as an audit trail regardless — see Section 6 of the handoff doc.
+model Notification {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  event     String
+  toName    String
+  toEmail   String?
+  toPhone   String?
+  subject   String
+  body      String
+
+  @@map("notifications")
+}
+
+enum AllowedRole {
+  teacher
+  substitute
+  admin
+}
+
+// Access control list, independent of the Teacher/Substitute/Admin roster tables
+// by design (an admin can grant portal access separately from roster membership).
+// Checked in the Auth.js signIn callback in src/lib/auth.ts.
+model AllowedUser {
+  id        String      @id @default(cuid())
+  email     String      @unique
+  role      AllowedRole
+  createdAt DateTime    @default(now())
+
+  @@map("allowed_users")
+}
+
+// --- Auth.js (next-auth v5) Prisma adapter schema ---
+// @auth/prisma-adapter expects these exact model names (User/Account/Session/
+// VerificationToken) — it doesn't support renaming them. Table names are still
+// namespaced via @@map so they read clearly in the database itself. Session
+// strategy is "database". These are Auth.js's own identity records, distinct
+// from the app-level Teacher/Substitute/Admin rows they're matched to by email.
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("auth_users")
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@map("auth_accounts")
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("auth_verification_tokens")
+}

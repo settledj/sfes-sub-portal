@@ -1,0 +1,216 @@
+"use client";
+
+import { useState } from "react";
+import { X, Star, Phone, Mail, Check, Clock } from "lucide-react";
+import { C, SUBJECTS } from "@/lib/constants";
+import { dateKey, prettyDate } from "@/lib/dates";
+import { effectiveStatus, isRequestable } from "@/lib/availability";
+import { Avatar } from "@/components/shared/Avatar";
+import { SubjectChip } from "@/components/shared/SubjectChip";
+import { StatusPill } from "@/components/shared/StatusPill";
+import { MiniCalendar } from "@/components/shared/MiniCalendar";
+import type { Sub, Booking } from "@/lib/types";
+
+export function SubDetailModal({
+  sub,
+  requests,
+  initialDate,
+  onClose,
+  onRequestSend,
+}: {
+  sub: Sub | undefined;
+  requests: Booking[];
+  initialDate: Date;
+  onClose: () => void;
+  onRequestSend: (subId: number, dk: string, details: { subject: string; grade: string; notes: string }) => void;
+}) {
+  const [viewMonth, setViewMonth] = useState(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+  const [pickedDate, setPickedDate] = useState(initialDate);
+  const [reqSubject, setReqSubject] = useState(sub?.subjects?.[0] || SUBJECTS[0]);
+  const [reqGrade, setReqGrade] = useState("");
+  const [reqNotes, setReqNotes] = useState("");
+
+  if (!sub) return null;
+
+  const dk = dateKey(pickedDate);
+  const status = effectiveStatus(sub.availability[dk]);
+  const existingRequest = requests.find((r) => r.subId === sub.id && r.dk === dk);
+  const canRequest = isRequestable(sub.availability[dk]) && !existingRequest;
+
+  const handleSubmit = () => {
+    onRequestSend(sub.id, dk, { subject: reqSubject, grade: reqGrade.trim(), notes: reqNotes.trim() });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto"
+      style={{ backgroundColor: "rgba(27,42,83,0.55)", WebkitOverflowScrolling: "touch" }}
+      onClick={onClose}
+    >
+      <div className="min-h-full flex items-start justify-center p-4 py-10">
+        <div className="bg-white rounded-2xl max-w-lg w-full p-6 relative" onClick={(e) => e.stopPropagation()}>
+          <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100">
+            <X size={18} color={C.grey} />
+          </button>
+
+          <div className="flex items-start gap-3 pr-6">
+            <Avatar sub={sub} size={64} showBadge badgeStatus={sub.availability[dateKey(new Date())]} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="font-bold text-lg truncate" style={{ fontFamily: "Barlow, sans-serif", color: C.navy }}>
+                  {sub.name}
+                </p>
+                {sub.preferred && <Star size={14} color={C.gold} fill={C.gold} />}
+              </div>
+              <p className="text-xs" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+                Badge reflects today&apos;s status
+              </p>
+            </div>
+          </div>
+
+          {sub.bio && (
+            <p className="text-sm mt-4 leading-relaxed" style={{ color: "#3F4552", fontFamily: "PT Serif, serif" }}>
+              {sub.bio}
+            </p>
+          )}
+
+          <div className="mt-4 space-y-1.5 text-sm" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
+            <p className="flex items-center gap-2"><Phone size={13} /> {sub.phone}</p>
+            <p className="flex items-center gap-2"><Mail size={13} /> {sub.email}</p>
+          </div>
+
+          {(sub.division || []).length > 0 && (
+            <>
+              <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+                Division
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {sub.division.map((d) => (
+                  <span key={d} className="text-[11px] px-2 py-0.5 rounded-full border" style={{ borderColor: C.blue, color: C.blue, fontFamily: "Barlow, sans-serif" }}>
+                    {d}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          {sub.subjects.length > 0 && (
+            <>
+              <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+                Subjects
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {sub.subjects.map((s) => (
+                  <span key={s} className="text-[11px] px-2 py-0.5 rounded-full" style={{ backgroundColor: C.greyLight, color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          {sub.additionalInfo && (
+            <>
+              <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+                Additional info
+              </p>
+              <p className="text-sm leading-relaxed" style={{ color: "#3F4552", fontFamily: "PT Serif, serif" }}>
+                {sub.additionalInfo}
+              </p>
+            </>
+          )}
+
+          <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+            Availability
+          </p>
+          <MiniCalendar sub={sub} viewMonth={viewMonth} setViewMonth={setViewMonth} pickedDate={pickedDate} setPickedDate={setPickedDate} />
+
+          <div className="mt-4 flex items-center justify-between rounded-lg px-3 py-2.5" style={{ backgroundColor: C.greyLight }}>
+            <div>
+              <p className="text-xs" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>Selected date</p>
+              <p className="text-sm font-semibold" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>{prettyDate(pickedDate)}</p>
+            </div>
+            <StatusPill status={status} />
+          </div>
+
+          {existingRequest && (
+            <div
+              className="mt-4 w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5"
+              style={{
+                fontFamily: "Barlow, sans-serif",
+                backgroundColor:
+                  existingRequest.status === "accepted" ? C.teal : existingRequest.status === "pending" ? C.gold : C.greyLight,
+                color: existingRequest.status === "declined" ? C.grey : "white",
+              }}
+            >
+              {existingRequest.status === "accepted" && <Check size={15} />}
+              {existingRequest.status === "pending" && <Clock size={15} />}
+              {existingRequest.status === "accepted"
+                ? "Confirmed"
+                : existingRequest.status === "pending"
+                ? "Request pending"
+                : "Declined — pick another date above to try again"}
+            </div>
+          )}
+
+          {!existingRequest && !canRequest && (
+            <div
+              className="mt-4 w-full py-2.5 rounded-lg text-sm text-center"
+              style={{ backgroundColor: C.greyLight, color: C.grey, fontFamily: "PT Serif, serif" }}
+            >
+              {sub.name.split(" ")[0]} isn&apos;t available on this date. Pick a date shown in teal on the calendar above.
+            </div>
+          )}
+
+          {canRequest && (
+            <div className="mt-4 rounded-lg p-4" style={{ border: `1px solid #E3E5EA` }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+                Request details
+              </p>
+
+              <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                Subject you need covered
+              </label>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {SUBJECTS.map((s) => (
+                  <SubjectChip key={s} label={s} active={reqSubject === s} onClick={() => setReqSubject(s)} tone={C.blue} />
+                ))}
+              </div>
+
+              <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                Grade level
+              </label>
+              <input
+                value={reqGrade}
+                onChange={(e) => setReqGrade(e.target.value)}
+                placeholder="e.g., 3rd Grade"
+                className="w-full text-sm rounded-lg border p-2 outline-none mb-3"
+                style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "PT Serif, serif" }}
+              />
+
+              <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                Additional info <span style={{ fontWeight: 400, color: C.grey }}>(optional)</span>
+              </label>
+              <textarea
+                value={reqNotes}
+                onChange={(e) => setReqNotes(e.target.value)}
+                rows={3}
+                placeholder="Where to find the lesson plan, timing, anything else the sub should know..."
+                className="w-full text-sm rounded-lg border p-2 outline-none resize-none mb-4"
+                style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "PT Serif, serif" }}
+              />
+
+              <button
+                onClick={handleSubmit}
+                className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
+                style={{ backgroundColor: C.red, fontFamily: "Barlow, sans-serif" }}
+              >
+                Submit request
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
