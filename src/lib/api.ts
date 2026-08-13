@@ -90,10 +90,6 @@ export function updateTeacherPhoto(id: number, photo: string) {
   return json<Teacher>(patch(`/api/teachers/${id}`, { photo }));
 }
 
-export function resetDemoData() {
-  return post("/api/reset");
-}
-
 export interface AllowedUserRow {
   id: string;
   email: string;

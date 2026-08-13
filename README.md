@@ -201,8 +201,12 @@ handoff doc for why.
   and less bug-prone than duplicating the server's mutation logic, at the cost of one extra round trip.
 - **Sub profile text fields** (bio, additional info) save `onBlur` instead of on every keystroke, to avoid
   a network round trip per character.
-- **"Reset demo data"** (`POST /api/reset`, admin-only) wipes and re-seeds the actual database from
-  `prisma/roster.local.ts` instead of resetting a local storage key.
+- **"Reset demo data" is a local CLI command, not an in-app button.** The prototype's header button called
+  an API route that wiped and reseeded the whole database on click. That's dangerous to expose on a real
+  deployment other people are using (one misclick nukes everyone's real test data), and it also depends on
+  `prisma/roster.local.ts`, which is gitignored and so doesn't exist on Vercel's build server at all —
+  importing it from an API route broke the production build. Run `npm run db:seed` from your own machine
+  instead, whenever you actually want to reset.
 - **Teacher photo overrides** (the prototype's separate `teacherPhotos` map, needed because `TEACHERS` was
   a hardcoded constant) are gone — `Teacher.photo` in the DB is directly mutable.
 
