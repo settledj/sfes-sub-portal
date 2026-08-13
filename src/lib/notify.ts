@@ -9,43 +9,68 @@ interface NotificationInput {
   body: string;
 }
 
+type DeliveryResult = { status: "sent" | "failed" | "skipped"; error: string | null };
+
 // Always writes the audit-trail row (Admin > Notifications tab), and — when the
 // relevant API keys are present — also actually sends the email/SMS. Without keys
 // this behaves exactly like the prototype's simulated log. Per Section 6 of the
-// handoff doc, the log stays even once real sending is wired up.
+// handoff doc, the log stays even once real sending is wired up. Delivery outcome
+// (sent/failed/skipped, plus any provider error) is stored on the row itself so a
+// failed real send is visible in the admin UI instead of looking identical to a
+// successful one — see emailStatus/smsStatus on the Notification model.
 export async function logNotification(prisma: PrismaClient, entry: NotificationInput) {
-  const record = await prisma.notification.create({ data: entry });
+  const [email, sms] = await Promise.all([sendEmail(entry), sendSms(entry)]);
 
-  await Promise.all([sendEmail(entry), sendSms(entry)]).catch((e) => {
-    // Real delivery failing shouldn't break the underlying booking action —
-    // the audit-trail row above already recorded what should have gone out.
-    console.error("Notification delivery failed:", e);
+  return prisma.notification.create({
+    data: {
+      ...entry,
+      emailStatus: email.status,
+      emailError: email.error,
+      smsStatus: sms.status,
+      smsError: sms.error,
+    },
   });
-
-  return record;
 }
 
-async function sendEmail(entry: NotificationInput) {
+async function sendEmail(entry: NotificationInput): Promise<DeliveryResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey || !entry.toEmail) return;
+  if (!apiKey || !entry.toEmail) return { status: "skipped", error: null };
 
-  const { Resend } = await import("resend");
-  const resend = new Resend(apiKey);
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL || "St. Francis Sub Portal <onboarding@resend.dev>",
-    to: entry.toEmail,
-    subject: entry.subject,
-    text: entry.body,
-  });
+  try {
+    const { Resend } = await import("resend");
+    const resend = new Resend(apiKey);
+    // The Resend SDK resolves with { data, error } on API-level rejections (e.g.
+    // sandbox sender restrictions) rather than throwing — has to be checked explicitly.
+    const { error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "St. Francis Sub Portal <onboarding@resend.dev>",
+      to: entry.toEmail,
+      subject: entry.subject,
+      text: entry.body,
+    });
+    if (error) {
+      console.error("Email delivery failed:", error);
+      return { status: "failed", error: error.message };
+    }
+    return { status: "sent", error: null };
+  } catch (e) {
+    console.error("Email delivery failed:", e);
+    return { status: "failed", error: e instanceof Error ? e.message : String(e) };
+  }
 }
 
-async function sendSms(entry: NotificationInput) {
+async function sendSms(entry: NotificationInput): Promise<DeliveryResult> {
   const sid = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
   const from = process.env.TWILIO_FROM_NUMBER;
-  if (!sid || !token || !from || !entry.toPhone) return;
+  if (!sid || !token || !from || !entry.toPhone) return { status: "skipped", error: null };
 
-  const twilio = (await import("twilio")).default;
-  const client = twilio(sid, token);
-  await client.messages.create({ to: entry.toPhone, from, body: `${entry.subject}: ${entry.body}` });
+  try {
+    const twilio = (await import("twilio")).default;
+    const client = twilio(sid, token);
+    await client.messages.create({ to: entry.toPhone, from, body: `${entry.subject}: ${entry.body}` });
+    return { status: "sent", error: null };
+  } catch (e) {
+    console.error("SMS delivery failed:", e);
+    return { status: "failed", error: e instanceof Error ? e.message : String(e) };
+  }
 }

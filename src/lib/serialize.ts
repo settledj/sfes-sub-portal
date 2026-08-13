@@ -1,5 +1,5 @@
 import type { Substitute, Teacher, Admin, Request as DbRequest, Notification as DbNotification } from "@prisma/client";
-import type { Sub, Teacher as TeacherDto, Admin as AdminDto, Booking, Notification, AvailabilityMap } from "./types";
+import type { Sub, Teacher as TeacherDto, Admin as AdminDto, Booking, Notification, DeliveryStatus, AvailabilityMap } from "./types";
 
 export function serializeSub(s: Substitute): Sub {
   return { ...s, availability: (s.availability as AvailabilityMap) ?? {} };
@@ -41,5 +41,9 @@ export function serializeNotification(n: DbNotification): Notification {
     toPhone: n.toPhone,
     subject: n.subject,
     body: n.body,
+    emailStatus: n.emailStatus as DeliveryStatus,
+    emailError: n.emailError,
+    smsStatus: n.smsStatus as DeliveryStatus,
+    smsError: n.smsError,
   };
 }

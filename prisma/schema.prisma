@@ -95,15 +95,22 @@ model Request {
 
 // Real delivery, gated on RESEND_API_KEY / TWILIO_* env vars (see src/lib/notify.ts).
 // This log is kept as an audit trail regardless — see Section 6 of the handoff doc.
+// emailStatus/smsStatus: "sent" | "failed" | "skipped" (no key configured, or no
+// recipient address/phone on file) — set by logNotification so a failed real send
+// is visible in Admin > Notifications instead of looking identical to a successful one.
 model Notification {
-  id        String   @id @default(cuid())
-  timestamp DateTime @default(now())
-  event     String
-  toName    String
-  toEmail   String?
-  toPhone   String?
-  subject   String
-  body      String
+  id          String   @id @default(cuid())
+  timestamp   DateTime @default(now())
+  event       String
+  toName      String
+  toEmail     String?
+  toPhone     String?
+  subject     String
+  body        String
+  emailStatus String   @default("skipped")
+  emailError  String?
+  smsStatus   String   @default("skipped")
+  smsError    String?
 
   @@map("notifications")
 }

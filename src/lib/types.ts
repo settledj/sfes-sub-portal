@@ -56,6 +56,8 @@ export interface Booking {
   source: RequestSource;
 }
 
+export type DeliveryStatus = "sent" | "failed" | "skipped";
+
 export interface Notification {
   id: string;
   timestamp: number;
@@ -65,6 +67,10 @@ export interface Notification {
   toPhone: string | null;
   subject: string;
   body: string;
+  emailStatus: DeliveryStatus;
+  emailError: string | null;
+  smsStatus: DeliveryStatus;
+  smsError: string | null;
 }
 
 export interface AppState {

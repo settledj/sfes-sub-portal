@@ -1,6 +1,35 @@
-import { Bell, Mail, MessageSquare } from "lucide-react";
+import { Bell, Mail, MessageSquare, Check, X, Minus } from "lucide-react";
 import { C } from "@/lib/constants";
-import type { Notification } from "@/lib/types";
+import type { Notification, DeliveryStatus } from "@/lib/types";
+
+const STATUS_STYLE: Record<DeliveryStatus, { icon: typeof Check; color: string; label: string }> = {
+  sent: { icon: Check, color: "#2F6B4F", label: "Sent" },
+  failed: { icon: X, color: "#B23A3A", label: "Failed" },
+  skipped: { icon: Minus, color: C.grey, label: "Not configured" },
+};
+
+function DeliveryBadge({
+  channel,
+  status,
+  error,
+  detail,
+}: {
+  channel: "email" | "sms";
+  status: DeliveryStatus;
+  error: string | null;
+  detail: string;
+}) {
+  const { icon: Icon, color, label } = STATUS_STYLE[status];
+  const ChannelIcon = channel === "email" ? Mail : MessageSquare;
+  return (
+    <span className="flex items-center gap-1" title={error || undefined}>
+      <ChannelIcon size={12} />
+      {detail}
+      <Icon size={12} color={color} className="ml-0.5" />
+      <span style={{ color }}>{label}{error ? ` — ${error}` : ""}</span>
+    </span>
+  );
+}
 
 export function AdminNotifications({ notifications }: { notifications: Notification[] }) {
   if (notifications.length === 0) {
@@ -18,9 +47,9 @@ export function AdminNotifications({ notifications }: { notifications: Notificat
       <div className="rounded-lg px-3 py-2.5 mb-4 flex items-start gap-2" style={{ backgroundColor: "#FBF2DF" }}>
         <Bell size={15} color={C.gold} className="mt-0.5 shrink-0" />
         <p className="text-xs" style={{ color: "#7A6220", fontFamily: "PT Serif, serif" }}>
-          This is a simulated log for the prototype — it shows exactly what would be emailed and texted, but nothing
-          actually leaves this browser. Wiring real delivery needs an email/SMS provider (e.g. SendGrid, Twilio) on
-          the backend once this becomes a real app.
+          This log records every notification the app tries to send, plus whether the real email/text actually went
+          out. &quot;Not configured&quot; means no provider key or no address/phone on file; &quot;Failed&quot; means
+          the provider rejected it (hover the row for the error).
         </p>
       </div>
       <div className="flex flex-col gap-2">
@@ -34,8 +63,13 @@ export function AdminNotifications({ notifications }: { notifications: Notificat
             </div>
             <p className="text-sm mb-2" style={{ color: "#3F4552", fontFamily: "PT Serif, serif" }}>{n.body}</p>
             <div className="flex flex-wrap gap-3 text-xs" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
-              <span className="flex items-center gap-1"><Mail size={12} /> {n.toName}{n.toEmail ? ` · ${n.toEmail}` : " · no email on file"}</span>
-              <span className="flex items-center gap-1"><MessageSquare size={12} /> {n.toPhone || "no phone on file"}</span>
+              <DeliveryBadge
+                channel="email"
+                status={n.emailStatus}
+                error={n.emailError}
+                detail={`${n.toName}${n.toEmail ? ` · ${n.toEmail}` : " · no email on file"}`}
+              />
+              <DeliveryBadge channel="sms" status={n.smsStatus} error={n.smsError} detail={n.toPhone || "no phone on file"} />
             </div>
           </div>
         ))}
