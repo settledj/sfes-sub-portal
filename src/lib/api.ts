@@ -77,7 +77,7 @@ export function rescheduleBooking(id: string, update: { subId: number; dk: strin
 
 export function updateSubProfile(
   id: number,
-  updates: Partial<Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo" | "photo">>
+  updates: Partial<Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo" | "photo" | "phone">>
 ) {
   return json<Sub>(patch(`/api/subs/${id}`, updates));
 }

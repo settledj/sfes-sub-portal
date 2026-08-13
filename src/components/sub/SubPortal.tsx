@@ -23,7 +23,7 @@ export function SubPortal({
   requests: Booking[];
   respondRequest: (requestId: string, accept: boolean) => void;
   onLogout: () => void;
-  onUpdateProfile: (updates: Partial<Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo">>) => void;
+  onUpdateProfile: (updates: Partial<Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo" | "phone">>) => void;
   onSetDayStatus: (dk: string, status: "available" | "unavailable") => void;
   onPhotoChange: (dataUri: string) => void;
 }) {
@@ -183,7 +183,17 @@ export function SubPortal({
           />
 
           <div className="mt-4 space-y-1.5 text-sm" style={{ fontFamily: "PT Serif, serif", color: C.grey }}>
-            <p className="flex items-center gap-2"><Phone size={13} /> {sub.phone}</p>
+            <div className="flex items-center gap-2">
+              <Phone size={13} className="shrink-0" />
+              <input
+                type="tel"
+                defaultValue={sub.phone}
+                onBlur={(e) => onUpdateProfile({ phone: e.target.value })}
+                placeholder="(555) 555-5555"
+                className="flex-1 min-w-0 rounded-md border px-1.5 py-0.5 outline-none"
+                style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "PT Serif, serif" }}
+              />
+            </div>
             <p className="flex items-center gap-2"><Mail size={13} /> {sub.email}</p>
           </div>
 
