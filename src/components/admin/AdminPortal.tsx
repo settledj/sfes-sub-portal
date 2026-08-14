@@ -97,10 +97,6 @@ export function AdminPortal({
         </button>
       </div>
 
-      <div className="mb-8 pb-8" style={{ borderBottom: "1px solid #E3E5EA" }}>
-        <AdminAvailability subs={subs} requests={requests} onQuickBookSub={handleQuickBookSub} />
-      </div>
-
       {tab === "bookings" && (
         <AdminBookings requests={requests} subs={subs} onApprove={onApprove} onDecline={onDecline} onCancel={onCancel} onReschedule={onReschedule} onRebook={handleRebook} />
       )}
@@ -114,6 +110,10 @@ export function AdminPortal({
       {tab === "access" && (
         <AdminAccess users={allowedUsers} onAdd={onAddAllowedUser} onRemove={onRemoveAllowedUser} onSetPassword={onSetAllowedUserPassword} />
       )}
+
+      <div className="mt-8 pt-8" style={{ borderTop: "1px solid #E3E5EA" }}>
+        <AdminAvailability subs={subs} requests={requests} onQuickBookSub={handleQuickBookSub} />
+      </div>
     </div>
   );
 }
