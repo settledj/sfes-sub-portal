@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, Search, Bell, PlusCircle, ShieldCheck, CalendarRange } from "lucide-react";
+import { ClipboardList, Search, Bell, PlusCircle, ShieldCheck } from "lucide-react";
 import { C } from "@/lib/constants";
 import { AdminBookings } from "@/components/admin/AdminBookings";
 import { AdminAvailability } from "@/components/admin/AdminAvailability";
@@ -44,7 +44,7 @@ export function AdminPortal({
   onRemoveAllowedUser: (id: string) => Promise<void>;
   onSetAllowedUserPassword: (id: string, password: string) => Promise<void>;
 }) {
-  const [tab, setTab] = useState<"bookings" | "availability" | "people" | "notifications" | "new" | "access">("bookings");
+  const [tab, setTab] = useState<"bookings" | "people" | "notifications" | "new" | "access">("bookings");
   const [prefill, setPrefill] = useState<NewBookingPrefill | null>(null);
 
   const handleRebook = (r: Booking) => {
@@ -66,13 +66,6 @@ export function AdminPortal({
           style={{ fontFamily: "Barlow, sans-serif", backgroundColor: tab === "bookings" ? C.navy : "transparent", color: tab === "bookings" ? "white" : C.grey }}
         >
           <ClipboardList size={14} /> All Bookings
-        </button>
-        <button
-          onClick={() => setTab("availability")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold"
-          style={{ fontFamily: "Barlow, sans-serif", backgroundColor: tab === "availability" ? C.navy : "transparent", color: tab === "availability" ? "white" : C.grey }}
-        >
-          <CalendarRange size={14} /> Availability
         </button>
         <button
           onClick={() => setTab("people")}
@@ -104,10 +97,13 @@ export function AdminPortal({
         </button>
       </div>
 
+      <div className="mb-8 pb-8" style={{ borderBottom: "1px solid #E3E5EA" }}>
+        <AdminAvailability subs={subs} requests={requests} onQuickBookSub={handleQuickBookSub} />
+      </div>
+
       {tab === "bookings" && (
         <AdminBookings requests={requests} subs={subs} onApprove={onApprove} onDecline={onDecline} onCancel={onCancel} onReschedule={onReschedule} onRebook={handleRebook} />
       )}
-      {tab === "availability" && <AdminAvailability subs={subs} requests={requests} onQuickBookSub={handleQuickBookSub} />}
       {tab === "people" && (
         <AdminPeople subs={subs} teachers={teachers} requests={requests} onCancel={onCancel} onQuickBookSub={handleQuickBookSub} onSaveDetails={onSaveDetails} onReassign={onReassign} />
       )}
