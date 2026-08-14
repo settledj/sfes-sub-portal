@@ -5,6 +5,7 @@ import { XCircle } from "lucide-react";
 import { C } from "@/lib/constants";
 import { dkToDate, prettyDate } from "@/lib/dates";
 import { Avatar } from "@/components/shared/Avatar";
+import { ConfirmCancelBookingModal } from "@/components/shared/ConfirmCancelBookingModal";
 import { BookingDetailModal } from "@/components/teacher/BookingDetailModal";
 import type { Sub, Booking } from "@/lib/types";
 
@@ -32,6 +33,7 @@ export function TeacherSchedule({
   onReassign: (id: string, newSubId: number) => void;
 }) {
   const [openBookingId, setOpenBookingId] = useState<string | null>(null);
+  const [cancelingId, setCancelingId] = useState<string | null>(null);
   const mine = requests.filter((r) => r.teacherId === teacherId).sort((a, b) => (a.dk > b.dk ? 1 : -1));
 
   if (mine.length === 0) {
@@ -81,7 +83,7 @@ export function TeacherSchedule({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onCancel(r.id);
+                  setCancelingId(r.id);
                 }}
                 className="text-xs font-semibold px-2.5 py-1.5 rounded-md flex items-center gap-1 whitespace-nowrap"
                 style={{ color: C.red, border: `1.5px solid ${C.red}`, fontFamily: "Barlow, sans-serif" }}
@@ -100,6 +102,18 @@ export function TeacherSchedule({
           onClose={() => setOpenBookingId(null)}
           onSaveDetails={onSaveDetails}
           onReassign={onReassign}
+        />
+      )}
+
+      {cancelingId && (
+        <ConfirmCancelBookingModal
+          booking={mine.find((r) => r.id === cancelingId)!}
+          subName={subs.find((s) => s.id === mine.find((r) => r.id === cancelingId)!.subId)?.name || "Unknown substitute"}
+          onClose={() => setCancelingId(null)}
+          onConfirm={() => {
+            onCancel(cancelingId);
+            setCancelingId(null);
+          }}
         />
       )}
     </div>

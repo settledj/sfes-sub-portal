@@ -5,6 +5,7 @@ import { Search, Check, Ban, RefreshCw, XCircle, PlusCircle } from "lucide-react
 import { C } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate, toInputValue } from "@/lib/dates";
 import { Avatar } from "@/components/shared/Avatar";
+import { ConfirmCancelBookingModal } from "@/components/shared/ConfirmCancelBookingModal";
 import type { Sub, Booking } from "@/lib/types";
 
 const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
@@ -36,6 +37,7 @@ export function AdminBookings({
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleSubId, setRescheduleSubId] = useState<number | null>(null);
+  const [cancelingId, setCancelingId] = useState<string | null>(null);
 
   const filtered = requests
     .filter((r) => {
@@ -151,7 +153,7 @@ export function AdminBookings({
                         <RefreshCw size={13} /> Reschedule
                       </button>
                       <button
-                        onClick={() => onCancel(r.id)}
+                        onClick={() => setCancelingId(r.id)}
                         className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-md"
                         style={{ color: C.red, border: `1.5px solid ${C.red}`, fontFamily: "Barlow, sans-serif" }}
                       >
@@ -217,6 +219,18 @@ export function AdminBookings({
             );
           })}
         </div>
+      )}
+
+      {cancelingId && (
+        <ConfirmCancelBookingModal
+          booking={requests.find((r) => r.id === cancelingId)!}
+          subName={subs.find((s) => s.id === requests.find((r) => r.id === cancelingId)!.subId)?.name || "Unknown substitute"}
+          onClose={() => setCancelingId(null)}
+          onConfirm={() => {
+            onCancel(cancelingId);
+            setCancelingId(null);
+          }}
+        />
       )}
     </div>
   );
