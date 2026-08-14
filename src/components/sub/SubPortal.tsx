@@ -6,6 +6,7 @@ import { C, SUBJECTS, DIVISIONS, BOOKING_STATUS_META } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate } from "@/lib/dates";
 import { effectiveStatus } from "@/lib/availability";
 import { EditableAvatar } from "@/components/shared/Avatar";
+import { EditableField } from "@/components/shared/EditableField";
 import { SubjectChip } from "@/components/shared/SubjectChip";
 import { SubDayModal } from "@/components/sub/SubDayModal";
 import type { Sub, Booking } from "@/lib/types";
@@ -173,26 +174,26 @@ export function SubPortal({
           <p className="text-xs font-semibold uppercase tracking-widest mt-4 mb-1" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
             Bio <span style={{ fontWeight: 400, color: C.grey }}>(optional)</span>
           </p>
-          <textarea
-            defaultValue={sub.bio}
-            onBlur={(e) => onUpdateProfile({ bio: e.target.value })}
-            rows={3}
+          <EditableField
+            value={sub.bio}
             placeholder="Add a short bio for teachers to see..."
-            className="w-full text-sm rounded-lg border p-2 outline-none resize-none"
-            style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "PT Serif, serif" }}
+            emptyLabel="Add a short bio for teachers to see..."
+            multiline
+            onSave={(bio) => onUpdateProfile({ bio })}
           />
 
           <div className="mt-4 space-y-1.5 text-sm" style={{ fontFamily: "PT Serif, serif", color: C.grey }}>
             <div className="flex items-center gap-2">
               <Phone size={13} className="shrink-0" />
-              <input
-                type="tel"
-                defaultValue={sub.phone}
-                onBlur={(e) => onUpdateProfile({ phone: e.target.value })}
-                placeholder="(555) 555-5555"
-                className="flex-1 min-w-0 rounded-md border px-1.5 py-0.5 outline-none"
-                style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "PT Serif, serif" }}
-              />
+              <div className="flex-1 min-w-0">
+                <EditableField
+                  value={sub.phone}
+                  placeholder="(555) 555-5555"
+                  emptyLabel="Add a phone number"
+                  type="tel"
+                  onSave={(phone) => onUpdateProfile({ phone })}
+                />
+              </div>
             </div>
             <p className="flex items-center gap-2"><Mail size={13} /> {sub.email}</p>
           </div>
