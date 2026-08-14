@@ -92,6 +92,7 @@ export function AdminPortal({
       <div className="mb-8 pb-8" style={{ borderBottom: "1px solid #E3E5EA" }}>
         <AdminAvailability
           subs={subs}
+          teachers={teachers}
           requests={requests}
           onQuickBookSub={handleQuickBookSub}
           onApprove={onApprove}

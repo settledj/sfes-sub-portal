@@ -65,6 +65,33 @@ export function Avatar({
   );
 }
 
+// Two overlapping avatars — e.g. a teacher and the substitute covering for
+// them — so a booking row reads at a glance without a name lookup. Primary
+// sits full-size top-left; secondary is smaller, bottom-right, with a white
+// ring so it stays legible against the primary photo.
+export function AvatarPair({
+  primary,
+  secondary,
+  size = 40,
+}: {
+  primary: AvatarPerson;
+  secondary?: AvatarPerson;
+  size?: number;
+}) {
+  if (!secondary) return <Avatar sub={primary} size={size} />;
+  const secondarySize = size * 0.62;
+  return (
+    <div className="relative shrink-0" style={{ width: size + secondarySize * 0.35, height: size + secondarySize * 0.35 }}>
+      <div className="absolute top-0 left-0">
+        <Avatar sub={primary} size={size} />
+      </div>
+      <div className="absolute bottom-0 right-0 rounded-full" style={{ boxShadow: "0 0 0 2px white" }}>
+        <Avatar sub={secondary} size={secondarySize} />
+      </div>
+    </div>
+  );
+}
+
 // Wraps Avatar with a tap-to-change-photo affordance. Opens the device's native
 // picker, which on mobile offers both "Take Photo" and "Choose from Library".
 export function EditableAvatar({

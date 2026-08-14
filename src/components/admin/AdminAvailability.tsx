@@ -12,10 +12,11 @@ import { WeekStrip } from "@/components/shared/WeekStrip";
 import { MonthGrid } from "@/components/shared/MonthGrid";
 import { AdminSubModal } from "@/components/admin/AdminSubModal";
 import { AdminBookings } from "@/components/admin/AdminBookings";
-import type { Sub, Booking } from "@/lib/types";
+import type { Sub, Teacher, Booking } from "@/lib/types";
 
 export function AdminAvailability({
   subs,
+  teachers,
   requests,
   onQuickBookSub,
   onApprove,
@@ -25,6 +26,7 @@ export function AdminAvailability({
   onRebook,
 }: {
   subs: Sub[];
+  teachers: Teacher[];
   requests: Booking[];
   onQuickBookSub: (sub: Sub) => void;
   onApprove: (id: string) => void;
@@ -153,6 +155,7 @@ export function AdminAvailability({
         <AdminBookings
           requests={requests}
           subs={subs}
+          teachers={teachers}
           onApprove={onApprove}
           onDecline={onDecline}
           onCancel={onCancel}

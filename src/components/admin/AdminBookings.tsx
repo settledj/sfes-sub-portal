@@ -4,9 +4,9 @@ import { useState } from "react";
 import { Search, Check, Ban, RefreshCw, XCircle, PlusCircle } from "lucide-react";
 import { C } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate, toInputValue } from "@/lib/dates";
-import { Avatar } from "@/components/shared/Avatar";
+import { AvatarPair } from "@/components/shared/Avatar";
 import { ConfirmCancelBookingModal } from "@/components/shared/ConfirmCancelBookingModal";
-import type { Sub, Booking } from "@/lib/types";
+import type { Sub, Teacher, Booking } from "@/lib/types";
 
 const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: "Pending", color: C.gold, bg: "#FBF2DF" },
@@ -18,6 +18,7 @@ const statusMeta: Record<string, { label: string; color: string; bg: string }> =
 export function AdminBookings({
   requests,
   subs,
+  teachers,
   onApprove,
   onDecline,
   onCancel,
@@ -26,6 +27,7 @@ export function AdminBookings({
 }: {
   requests: Booking[];
   subs: Sub[];
+  teachers: Teacher[];
   onApprove: (id: string) => void;
   onDecline: (id: string) => void;
   onCancel: (id: string) => void;
@@ -99,13 +101,14 @@ export function AdminBookings({
         <div className="flex flex-col gap-3">
           {filtered.map((r) => {
             const sub = subs.find((s) => s.id === r.subId);
+            const teacher = teachers.find((t) => t.id === r.teacherId);
             const date = dkToDate(r.dk);
             const meta = statusMeta[r.status] || statusMeta.pending;
             const isRescheduling = reschedulingId === r.id;
             return (
               <div key={r.id} className="rounded-xl border bg-white p-4" style={{ borderColor: "#E3E5EA" }}>
                 <div className="flex items-center gap-3">
-                  {sub && <Avatar sub={sub} size={40} />}
+                  {sub && <AvatarPair primary={sub} secondary={teacher} size={40} />}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
                       {prettyDate(date)}
@@ -121,10 +124,10 @@ export function AdminBookings({
                 </div>
 
                 {r.notes && (
-                  <p className="text-xs mt-2 sm:ml-[52px]" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>{r.notes}</p>
+                  <p className="text-xs mt-2 sm:ml-16" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>{r.notes}</p>
                 )}
 
-                <div className="flex flex-wrap items-center gap-2 mt-3 sm:ml-[52px]">
+                <div className="flex flex-wrap items-center gap-2 mt-3 sm:ml-16">
                   {r.status === "pending" && (
                     <>
                       <button
@@ -173,7 +176,7 @@ export function AdminBookings({
                 </div>
 
                 {isRescheduling && (
-                  <div className="mt-3 sm:ml-[52px] p-3 rounded-lg flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap" style={{ backgroundColor: C.greyLight }}>
+                  <div className="mt-3 sm:ml-16 p-3 rounded-lg flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap" style={{ backgroundColor: C.greyLight }}>
                     <div>
                       <label className="text-xs font-semibold block mb-1" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>New date</label>
                       <input
