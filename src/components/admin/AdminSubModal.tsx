@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { X, Star, PlusCircle } from "lucide-react";
 import { C } from "@/lib/constants";
-import { dkToDate, prettyDate } from "@/lib/dates";
+import { dateKey, dkToDate, prettyDate } from "@/lib/dates";
 import { usernameFor } from "@/lib/people";
 import { Avatar } from "@/components/shared/Avatar";
 import { MiniCalendar } from "@/components/shared/MiniCalendar";
@@ -81,7 +81,13 @@ export function AdminSubModal({
           )}
 
           <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>Availability</p>
-          <MiniCalendar sub={sub} viewMonth={viewMonth} setViewMonth={setViewMonth} pickedDate={pickedDate} setPickedDate={setPickedDate} />
+          <MiniCalendar
+            sub={sub}
+            viewMonth={viewMonth}
+            setViewMonth={setViewMonth}
+            isSelected={(dk) => dateKey(pickedDate) === dk}
+            onSelect={setPickedDate}
+          />
 
           <div className="flex items-center justify-between mt-5 mb-2">
             <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>Bookings</p>

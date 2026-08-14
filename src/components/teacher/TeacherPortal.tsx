@@ -11,6 +11,7 @@ export function TeacherPortal({
   subs,
   requests,
   sendRequest,
+  sendMultiRequest,
   cancelRequest,
   updateRequestDetails,
   reassignBooking,
@@ -21,6 +22,11 @@ export function TeacherPortal({
   subs: Sub[];
   requests: Booking[];
   sendRequest: (subId: number, dk: string, details: { subject: string; grade: string; notes: string }) => void;
+  sendMultiRequest: (
+    subId: number,
+    dks: string[],
+    details: { subject: string; grade: string; notes: string }
+  ) => Promise<{ sent: string[]; conflicts: string[] }>;
   cancelRequest: (id: string) => void;
   updateRequestDetails: (id: string, details: { lessonPlan: string; schedule: string; attendance: string; notes: string }) => void;
   reassignBooking: (id: string, newSubId: number) => void;
@@ -50,6 +56,7 @@ export function TeacherPortal({
         subs={subs}
         requests={requests}
         sendRequest={sendRequest}
+        sendMultiRequest={sendMultiRequest}
         teacherId={teacher.id}
         onCancelBooking={cancelRequest}
         onSaveBookingDetails={updateRequestDetails}

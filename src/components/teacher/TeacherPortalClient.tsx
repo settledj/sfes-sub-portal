@@ -42,6 +42,18 @@ export function TeacherPortalClient({ teacher }: { teacher: Teacher }) {
         const created = await api.sendRequest({ subId, dk, teacherId: liveTeacher.id, teacherName: liveTeacher.name, ...details });
         if (created) setState((s) => ({ ...s, requests: [...s.requests, created] }));
       }}
+      sendMultiRequest={async (subId, dks, details) => {
+        const results = await Promise.all(
+          dks.map(async (dk) => ({
+            dk,
+            created: await api.sendRequest({ subId, dk, teacherId: liveTeacher.id, teacherName: liveTeacher.name, ...details }),
+          }))
+        );
+        const created = results.flatMap((r) => (r.created ? [r.created] : []));
+        const conflicts = results.filter((r) => !r.created).map((r) => r.dk);
+        if (created.length > 0) setState((s) => ({ ...s, requests: [...s.requests, ...created] }));
+        return { sent: created.map((c) => c.dk), conflicts };
+      }}
       cancelRequest={async (id) => {
         await api.cancelRequest(id);
         await refreshAll();

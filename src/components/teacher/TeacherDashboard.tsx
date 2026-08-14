@@ -18,6 +18,7 @@ export function TeacherDashboard({
   subs,
   requests,
   sendRequest,
+  sendMultiRequest,
   teacherId,
   onCancelBooking,
   onSaveBookingDetails,
@@ -26,6 +27,11 @@ export function TeacherDashboard({
   subs: Sub[];
   requests: Booking[];
   sendRequest: (subId: number, dk: string, details: { subject: string; grade: string; notes: string }) => void;
+  sendMultiRequest: (
+    subId: number,
+    dks: string[],
+    details: { subject: string; grade: string; notes: string }
+  ) => Promise<{ sent: string[]; conflicts: string[] }>;
   teacherId: number;
   onCancelBooking: (id: string) => void;
   onSaveBookingDetails: (id: string, details: { lessonPlan: string; schedule: string; attendance: string; notes: string }) => void;
@@ -295,6 +301,7 @@ export function TeacherDashboard({
         initialDate={selectedDate}
         onClose={() => setOpenSubId(null)}
         onRequestSend={sendRequest}
+        onMultiRequestSend={sendMultiRequest}
       />
     </div>
   );

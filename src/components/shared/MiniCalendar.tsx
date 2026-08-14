@@ -8,14 +8,14 @@ export function MiniCalendar({
   sub,
   viewMonth,
   setViewMonth,
-  pickedDate,
-  setPickedDate,
+  isSelected,
+  onSelect,
 }: {
   sub: Sub;
   viewMonth: Date;
   setViewMonth: (d: Date) => void;
-  pickedDate: Date;
-  setPickedDate: (d: Date) => void;
+  isSelected: (dk: string) => boolean;
+  onSelect: (d: Date) => void;
 }) {
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
@@ -51,12 +51,12 @@ export function MiniCalendar({
           const d = new Date(year, month, day);
           const dk = dateKey(d);
           const status = effectiveStatus(sub.availability[dk]);
-          const isPicked = dateKey(pickedDate) === dk;
+          const isPicked = isSelected(dk);
           const bg = status === "booked" ? C.gold : status === "unavailable" ? C.red : C.teal;
           return (
             <button
               key={idx}
-              onClick={() => setPickedDate(d)}
+              onClick={() => onSelect(d)}
               className="aspect-square rounded-md text-xs font-medium flex items-center justify-center border transition-all"
               style={{
                 backgroundColor: bg,
