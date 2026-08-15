@@ -39,6 +39,7 @@ export interface Admin {
 
 export type RequestStatus = "pending" | "accepted" | "declined" | "cancelled";
 export type RequestSource = "teacher" | "admin";
+export type PortalRole = "teacher" | "substitute" | "admin";
 
 export interface Booking {
   id: string;
@@ -52,8 +53,20 @@ export interface Booking {
   lessonPlan: string;
   schedule: string;
   attendance: string;
+  subFeedback: string;
   status: RequestStatus;
   source: RequestSource;
+}
+
+// A single message in a booking's two-way thread between teacher and
+// substitute (admins can read and post too). See src/components/shared/BookingDetailModal.tsx.
+export interface Message {
+  id: string;
+  requestId: string;
+  senderRole: PortalRole;
+  senderName: string;
+  body: string;
+  createdAt: number;
 }
 
 export type DeliveryStatus = "sent" | "failed" | "skipped";

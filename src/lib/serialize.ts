@@ -1,5 +1,5 @@
-import type { Substitute, Teacher, Admin, Request as DbRequest, Notification as DbNotification } from "@prisma/client";
-import type { Sub, Teacher as TeacherDto, Admin as AdminDto, Booking, Notification, DeliveryStatus, AvailabilityMap } from "./types";
+import type { Substitute, Teacher, Admin, Request as DbRequest, Notification as DbNotification, Message as DbMessage } from "@prisma/client";
+import type { Sub, Teacher as TeacherDto, Admin as AdminDto, Booking, Notification, Message, PortalRole, DeliveryStatus, AvailabilityMap } from "./types";
 
 export function serializeSub(s: Substitute): Sub {
   return { ...s, availability: (s.availability as AvailabilityMap) ?? {} };
@@ -26,8 +26,20 @@ export function serializeRequest(r: DbRequest): Booking {
     lessonPlan: r.lessonPlan,
     schedule: r.schedule,
     attendance: r.attendance,
+    subFeedback: r.subFeedback,
     status: r.status,
     source: r.source,
+  };
+}
+
+export function serializeMessage(m: DbMessage): Message {
+  return {
+    id: m.id,
+    requestId: m.requestId,
+    senderRole: m.senderRole as PortalRole,
+    senderName: m.senderName,
+    body: m.body,
+    createdAt: m.createdAt.getTime(),
   };
 }
 

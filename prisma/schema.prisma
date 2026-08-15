@@ -85,12 +85,37 @@ model Request {
   lessonPlan  String        @default("")
   schedule    String        @default("")
   attendance  String        @default("")
+  // The substitute's own end-of-day account of how it went — student
+  // behavior, what got covered, what didn't, anything the teacher should
+  // know. Written by the substitute after the assignment; read-only for
+  // everyone else. Single free-text field by design, matching the pattern
+  // of the other booking notes fields rather than forcing rigid sub-sections.
+  subFeedback String        @default("")
   status      RequestStatus @default(pending)
   source      RequestSource @default(teacher)
+  messages    Message[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   @@map("requests")
+}
+
+// Two-way thread scoped to a single booking — the "communicate back and
+// forth" requirement. senderRole reuses AllowedRole so it always matches
+// one of the three portal roles; senderName is denormalized (not a relation
+// to Teacher/Substitute/Admin) since any of the three role tables could be
+// the sender and messages should stay readable even if that person's roster
+// row is later renamed or removed.
+model Message {
+  id         String      @id @default(cuid())
+  requestId  String
+  request    Request     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  senderRole AllowedRole
+  senderName String
+  body       String
+  createdAt  DateTime    @default(now())
+
+  @@map("messages")
 }
 
 // Real delivery, gated on RESEND_API_KEY / TWILIO_* env vars (see src/lib/notify.ts).

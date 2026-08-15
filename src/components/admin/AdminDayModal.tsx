@@ -22,12 +22,14 @@ export function AdminDayModal({
   teachers,
   requests,
   onClose,
+  onOpenBooking,
 }: {
   date: Date;
   subs: Sub[];
   teachers: Teacher[];
   requests: Booking[];
   onClose: () => void;
+  onOpenBooking: (id: string) => void;
 }) {
   const dk = dateKey(date);
   const dayRequests = requests.filter((r) => r.dk === dk).sort((a, b) => (a.status > b.status ? 1 : -1));
@@ -72,7 +74,12 @@ export function AdminDayModal({
                 const teacher = teachers.find((t) => t.id === r.teacherId);
                 const meta = statusMeta[r.status] || statusMeta.pending;
                 return (
-                  <div key={r.id} className="flex items-center gap-3 rounded-lg p-2.5" style={{ backgroundColor: C.greyLight }}>
+                  <div
+                    key={r.id}
+                    onClick={() => onOpenBooking(r.id)}
+                    className="flex items-center gap-3 rounded-lg p-2.5 cursor-pointer hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: C.greyLight }}
+                  >
                     {sub && <AvatarPair primary={sub} secondary={teacher} size={36} />}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold truncate" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/authz";
+import { requireRole, teacherOwnsBooking } from "@/lib/authz";
 import { logNotification } from "@/lib/notify";
 import { serializeRequest } from "@/lib/serialize";
 import { dkToDate, prettyDate } from "@/lib/dates";
@@ -15,6 +15,10 @@ export async function POST(req: Request) {
   if (check instanceof NextResponse) return check;
 
   const { subId, dk, teacherId, teacherName, subject = "", grade = "", notes = "" } = payload;
+
+  if (!(await teacherOwnsBooking(check.session, teacherId))) {
+    return NextResponse.json({ error: "Not your booking." }, { status: 403 });
+  }
 
   const sub = await prisma.substitute.findUnique({ where: { id: subId } });
   if (!sub) return NextResponse.json({ error: "Substitute not found." }, { status: 404 });

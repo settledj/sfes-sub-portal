@@ -11,12 +11,14 @@ import { AdminPeople } from "@/components/admin/AdminPeople";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { AdminNewBooking, type NewBookingPrefill } from "@/components/admin/AdminNewBooking";
 import { AdminAccess, type AllowedUserRow } from "@/components/admin/AdminAccess";
+import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
 import type { Sub, Teacher, Booking, Notification } from "@/lib/types";
 
 export function AdminPortal({
   subs,
   teachers,
   requests,
+  adminName,
   onApprove,
   onDecline,
   onCancel,
@@ -24,6 +26,7 @@ export function AdminPortal({
   onCreate,
   onSaveDetails,
   onReassign,
+  onSubmitFeedback,
   notifications,
   allowedUsers,
   onAddAllowedUser,
@@ -33,6 +36,7 @@ export function AdminPortal({
   subs: Sub[];
   teachers: Teacher[];
   requests: Booking[];
+  adminName: string;
   onApprove: (id: string) => void;
   onDecline: (id: string) => void;
   onCancel: (id: string) => void;
@@ -40,6 +44,7 @@ export function AdminPortal({
   onCreate: (payload: { teacherId: number; teacherName: string; subId: number; dk: string; subject: string; grade: string; notes: string }) => void;
   onSaveDetails: (id: string, details: { lessonPlan: string; schedule: string; attendance: string; notes: string }) => void;
   onReassign: (id: string, newSubId: number) => void;
+  onSubmitFeedback: (id: string, feedback: string) => Promise<void>;
   notifications: Notification[];
   allowedUsers: AllowedUserRow[];
   onAddAllowedUser: (email: string, role: "teacher" | "substitute" | "admin", password: string) => Promise<void>;
@@ -48,6 +53,8 @@ export function AdminPortal({
 }) {
   const [tab, setTab] = useState<"people" | "notifications" | "new" | "access">("people");
   const [prefill, setPrefill] = useState<NewBookingPrefill | null>(null);
+  const [openBookingId, setOpenBookingId] = useState<string | null>(null);
+  const openBooking = requests.find((r) => r.id === openBookingId);
 
   const [viewMode, setViewMode] = useState<AdminViewMode>("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -144,11 +151,12 @@ export function AdminPortal({
           onCancel={onCancel}
           onReschedule={onReschedule}
           onRebook={handleRebook}
+          onOpenBooking={setOpenBookingId}
         />
       </div>
 
       {tab === "people" && (
-        <AdminPeople subs={subs} teachers={teachers} requests={requests} onCancel={onCancel} onQuickBookSub={handleQuickBookSub} onSaveDetails={onSaveDetails} onReassign={onReassign} />
+        <AdminPeople subs={subs} teachers={teachers} requests={requests} onCancel={onCancel} onQuickBookSub={handleQuickBookSub} onOpenBooking={setOpenBookingId} />
       )}
       {tab === "notifications" && <AdminNotifications notifications={notifications} />}
       {tab === "new" && (
@@ -159,7 +167,24 @@ export function AdminPortal({
       )}
 
       {openDayDate && (
-        <AdminDayModal date={openDayDate} subs={subs} teachers={teachers} requests={requests} onClose={() => setOpenDayDate(null)} />
+        <AdminDayModal date={openDayDate} subs={subs} teachers={teachers} requests={requests} onClose={() => setOpenDayDate(null)} onOpenBooking={setOpenBookingId} />
+      )}
+
+      {openBooking && (
+        <BookingDetailModal
+          booking={openBooking}
+          teacher={teachers.find((t) => t.id === openBooking.teacherId)}
+          sub={subs.find((s) => s.id === openBooking.subId)}
+          subs={subs}
+          role="admin"
+          currentUserName={adminName}
+          onClose={() => setOpenBookingId(null)}
+          onSaveDetails={onSaveDetails}
+          onReassign={onReassign}
+          onCancel={onCancel}
+          onRespond={(id, accept) => (accept ? onApprove(id) : onDecline(id))}
+          onSubmitFeedback={onSubmitFeedback}
+        />
       )}
     </div>
   );

@@ -21,8 +21,7 @@ export function TeacherDashboard({
   sendMultiRequest,
   teacherId,
   onCancelBooking,
-  onSaveBookingDetails,
-  onReassignBooking,
+  onOpenBooking,
 }: {
   subs: Sub[];
   requests: Booking[];
@@ -34,8 +33,7 @@ export function TeacherDashboard({
   ) => Promise<{ sent: string[]; conflicts: string[] }>;
   teacherId: number;
   onCancelBooking: (id: string) => void;
-  onSaveBookingDetails: (id: string, details: { lessonPlan: string; schedule: string; attendance: string; notes: string }) => void;
-  onReassignBooking: (id: string, newSubId: number) => void;
+  onOpenBooking: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("All");
@@ -184,8 +182,7 @@ export function TeacherDashboard({
               requests={requests}
               subs={subs}
               onCancel={onCancelBooking}
-              onSaveDetails={onSaveBookingDetails}
-              onReassign={onReassignBooking}
+              onOpenBooking={onOpenBooking}
             />
           </div>
         )}

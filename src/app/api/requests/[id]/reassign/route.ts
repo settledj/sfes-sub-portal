@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/authz";
+import { requireRole, teacherOwnsBooking } from "@/lib/authz";
 import { serializeRequest } from "@/lib/serialize";
 
 // Teacher (or admin) swaps in a different sub for the same date — e.g. the original
@@ -14,6 +14,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const existing = await prisma.request.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Request not found." }, { status: 404 });
+  if (!(await teacherOwnsBooking(check.session, existing.teacherId))) {
+    return NextResponse.json({ error: "Not your booking." }, { status: 403 });
+  }
   if (newSubId === existing.subId) return NextResponse.json(serializeRequest(existing));
 
   const oldSub = await prisma.substitute.findUnique({ where: { id: existing.subId } });

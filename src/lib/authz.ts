@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "./auth";
+import { prisma } from "./prisma";
 import type { AllowedRole } from "@prisma/client";
+
+export type Session = { user: { email?: string | null; role?: AllowedRole | null } };
 
 // Every mutating API route calls this first. Returns either an authorized
 // session or a Response to return immediately (401/403) — callers do:
@@ -26,4 +29,22 @@ export async function requireAnySession() {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
   return { session };
+}
+
+// A signed-in teacher may only act on bookings tied to their own Teacher
+// record — admins bypass this (they act on anyone's booking). Returns true
+// when the caller may proceed. Call after requireRole(["teacher","admin"]).
+export async function teacherOwnsBooking(session: Session, teacherId: number) {
+  if (session.user.role !== "teacher") return true;
+  const teacher = await prisma.teacher.findUnique({ where: { id: teacherId } });
+  return teacher?.email === session.user.email;
+}
+
+// Same idea for substitutes — a substitute may only act on bookings tied to
+// their own Substitute record; admins bypass. Call after
+// requireRole(["substitute","admin"]).
+export async function subOwnsBooking(session: Session, subId: number) {
+  if (session.user.role !== "substitute") return true;
+  const sub = await prisma.substitute.findUnique({ where: { id: subId } });
+  return sub?.email === session.user.email;
 }

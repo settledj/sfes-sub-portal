@@ -36,10 +36,15 @@ export function SubPortalClient({ sub }: { sub: Sub }) {
   return (
     <SubPortal
       sub={liveSub}
+      teachers={state.teachers}
       requests={state.requests}
       respondRequest={async (id, accept) => {
         await api.respondRequest(id, accept);
         await refreshAll();
+      }}
+      onSubmitFeedback={async (id, subFeedback) => {
+        const updated = await api.submitFeedback(id, subFeedback);
+        setState((s) => ({ ...s, requests: s.requests.map((r) => (r.id === id ? updated : r)) }));
       }}
       onLogout={() => signOut({ callbackUrl: "/signin" })}
       onUpdateProfile={async (updates) => {

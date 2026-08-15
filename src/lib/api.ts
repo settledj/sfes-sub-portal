@@ -1,6 +1,6 @@
 // Thin client-side fetch wrappers around the API routes in src/app/api/. Kept
 // separate from the portal client components so they stay focused on rendering.
-import type { AppState, Booking, Sub, Teacher } from "./types";
+import type { AppState, Booking, Message, Sub, Teacher } from "./types";
 
 async function json<T>(resPromise: Promise<Response>): Promise<T> {
   const res = await resPromise;
@@ -73,6 +73,18 @@ export function reassignBooking(id: string, subId: number) {
 
 export function rescheduleBooking(id: string, update: { subId: number; dk: string }) {
   return json<Booking>(post(`/api/requests/${id}/reschedule`, update));
+}
+
+export function fetchMessages(requestId: string) {
+  return json<Message[]>(fetch(`/api/requests/${requestId}/messages`));
+}
+
+export function sendMessage(requestId: string, body: string) {
+  return json<Message>(post(`/api/requests/${requestId}/messages`, { body }));
+}
+
+export function submitFeedback(id: string, subFeedback: string) {
+  return json<Booking>(post(`/api/requests/${id}/feedback`, { subFeedback }));
 }
 
 export function updateSubProfile(

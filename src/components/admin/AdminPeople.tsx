@@ -14,16 +14,14 @@ export function AdminPeople({
   requests,
   onCancel,
   onQuickBookSub,
-  onSaveDetails,
-  onReassign,
+  onOpenBooking,
 }: {
   subs: Sub[];
   teachers: Teacher[];
   requests: Booking[];
   onCancel: (id: string) => void;
   onQuickBookSub: (sub: Sub) => void;
-  onSaveDetails: (id: string, details: { lessonPlan: string; schedule: string; attendance: string; notes: string }) => void;
-  onReassign: (id: string, newSubId: number) => void;
+  onOpenBooking: (id: string) => void;
 }) {
   const [mode, setMode] = useState<"teachers" | "subs">("teachers");
   const [query, setQuery] = useState("");
@@ -145,8 +143,7 @@ export function AdminPeople({
           subs={subs}
           onClose={() => setSelectedTeacherId(null)}
           onCancel={onCancel}
-          onSaveDetails={onSaveDetails}
-          onReassign={onReassign}
+          onOpenBooking={onOpenBooking}
         />
       )}
       {selectedSubId && (
@@ -158,6 +155,7 @@ export function AdminPeople({
             setSelectedSubId(null);
             onQuickBookSub(sub);
           }}
+          onOpenBooking={onOpenBooking}
         />
       )}
     </div>

@@ -64,6 +64,7 @@ export function AdminPortalClient({ adminName }: { adminName: string }) {
         subs={state.subs}
         teachers={state.teachers}
         requests={state.requests}
+        adminName={adminName}
         onApprove={async (id) => {
           await api.respondRequest(id, true);
           await refreshAll();
@@ -91,6 +92,10 @@ export function AdminPortalClient({ adminName }: { adminName: string }) {
         onReassign={async (id, newSubId) => {
           await api.reassignBooking(id, newSubId);
           await refreshAll();
+        }}
+        onSubmitFeedback={async (id, subFeedback) => {
+          const updated = await api.submitFeedback(id, subFeedback);
+          setState((s) => ({ ...s, requests: s.requests.map((r) => (r.id === id ? updated : r)) }));
         }}
         notifications={state.notifications}
         allowedUsers={allowedUsers}

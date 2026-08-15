@@ -24,6 +24,7 @@ export function AdminBookings({
   onCancel,
   onReschedule,
   onRebook,
+  onOpenBooking,
 }: {
   requests: Booking[];
   subs: Sub[];
@@ -33,6 +34,7 @@ export function AdminBookings({
   onCancel: (id: string) => void;
   onReschedule: (id: string, update: { subId: number; dk: string }) => void;
   onRebook: (r: Booking) => void;
+  onOpenBooking: (id: string) => void;
 }) {
   const [statusFilter, setStatusFilter] = useState("active");
   const [query, setQuery] = useState("");
@@ -107,7 +109,10 @@ export function AdminBookings({
             const isRescheduling = reschedulingId === r.id;
             return (
               <div key={r.id} className="rounded-xl border bg-white p-4" style={{ borderColor: "#E3E5EA" }}>
-                <div className="flex items-center gap-3">
+                <div
+                  onClick={() => onOpenBooking(r.id)}
+                  className="flex items-center gap-3 cursor-pointer -m-1 p-1 rounded-lg hover:bg-gray-50"
+                >
                   {sub && <AvatarPair primary={sub} secondary={teacher} size={40} />}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>

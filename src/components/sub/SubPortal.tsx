@@ -9,24 +9,29 @@ import { EditableAvatar } from "@/components/shared/Avatar";
 import { EditableField } from "@/components/shared/EditableField";
 import { SubjectChip } from "@/components/shared/SubjectChip";
 import { SubDayModal } from "@/components/sub/SubDayModal";
-import type { Sub, Booking } from "@/lib/types";
+import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
+import type { Sub, Teacher, Booking } from "@/lib/types";
 
 export function SubPortal({
   sub,
+  teachers,
   requests,
   respondRequest,
   onLogout,
   onUpdateProfile,
   onSetDayStatus,
   onPhotoChange,
+  onSubmitFeedback,
 }: {
   sub: Sub;
+  teachers: Teacher[];
   requests: Booking[];
   respondRequest: (requestId: string, accept: boolean) => void;
   onLogout: () => void;
   onUpdateProfile: (updates: Partial<Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo" | "phone">>) => void;
   onSetDayStatus: (dk: string, status: "available" | "unavailable") => void;
   onPhotoChange: (dataUri: string) => void;
+  onSubmitFeedback: (id: string, feedback: string) => Promise<void>;
 }) {
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const d = new Date();
@@ -34,10 +39,12 @@ export function SubPortal({
     return d;
   });
   const [openDate, setOpenDate] = useState<Date | null>(null);
+  const [openBookingId, setOpenBookingId] = useState<string | null>(null);
   const [calendarViewMode, setCalendarViewMode] = useState<"month" | "list">("month");
   const [listStatusFilter, setListStatusFilter] = useState("all");
 
   const myRequests = requests.filter((r) => r.subId === sub.id).sort((a, b) => (a.dk > b.dk ? 1 : -1));
+  const openBooking = myRequests.find((r) => r.id === openBookingId);
   const pending = myRequests.filter((r) => r.status === "pending");
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -96,21 +103,31 @@ export function SubPortal({
             {pending.map((r) => {
               const date = dkToDate(r.dk);
               return (
-                <div key={r.id} className="bg-white rounded-lg px-3 py-2.5 flex flex-col gap-2">
+                <div
+                  key={r.id}
+                  onClick={() => setOpenBookingId(r.id)}
+                  className="bg-white rounded-lg px-3 py-2.5 flex flex-col gap-2 cursor-pointer hover:shadow-sm transition-shadow"
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
                       {prettyDate(date)}
                     </span>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => respondRequest(r.id, true)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          respondRequest(r.id, true);
+                        }}
                         className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-md text-white"
                         style={{ backgroundColor: C.teal, fontFamily: "Barlow, sans-serif" }}
                       >
                         <Check size={13} /> Accept
                       </button>
                       <button
-                        onClick={() => respondRequest(r.id, false)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          respondRequest(r.id, false);
+                        }}
                         className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-md"
                         style={{ backgroundColor: "white", color: C.grey, border: "1px solid #D9DCE3", fontFamily: "Barlow, sans-serif" }}
                       >
@@ -144,7 +161,7 @@ export function SubPortal({
             {upcoming.map((r) => (
               <button
                 key={r.id}
-                onClick={() => setOpenDate(dkToDate(r.dk))}
+                onClick={() => setOpenBookingId(r.id)}
                 className="w-full text-left bg-white rounded-lg px-3 py-2.5 flex items-center justify-between hover:shadow-sm transition-shadow"
               >
                 <div>
@@ -229,7 +246,7 @@ export function SubPortal({
                     return (
                       <button
                         key={r.id}
-                        onClick={() => setOpenDate(dkToDate(r.dk))}
+                        onClick={() => setOpenBookingId(r.id)}
                         className="w-full text-left rounded-lg border px-3 py-2.5 flex items-center justify-between gap-3 hover:shadow-sm transition-shadow"
                         style={{ borderColor: "#E3E5EA" }}
                       >
@@ -271,10 +288,15 @@ export function SubPortal({
                   const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                   const bg = isWeekend ? "#F2F3F5" : status === "booked" ? C.gold : status === "unavailable" ? C.red : C.teal;
                   const textColor = isWeekend ? "#B7BAC2" : "white";
+                  const dayBooking = myRequests.find((r) => r.dk === dk && r.status === "accepted");
                   return (
                     <button
                       key={idx}
-                      onClick={() => !isWeekend && setOpenDate(d)}
+                      onClick={() => {
+                        if (isWeekend) return;
+                        if (dayBooking) setOpenBookingId(dayBooking.id);
+                        else setOpenDate(d);
+                      }}
                       disabled={isWeekend}
                       title={status === "booked" ? "Booked — tap to see details" : "Tap to view or change"}
                       className="aspect-square rounded-lg text-sm font-medium flex items-center justify-center border transition-colors"
@@ -374,7 +396,20 @@ export function SubPortal({
       </div>
 
       {openDate && (
-        <SubDayModal sub={sub} date={openDate} requests={requests} onClose={() => setOpenDate(null)} onSetStatus={onSetDayStatus} />
+        <SubDayModal sub={sub} date={openDate} onClose={() => setOpenDate(null)} onSetStatus={onSetDayStatus} />
+      )}
+
+      {openBooking && (
+        <BookingDetailModal
+          booking={openBooking}
+          teacher={teachers.find((t) => t.id === openBooking.teacherId)}
+          sub={sub}
+          role="substitute"
+          currentUserName={sub.name}
+          onClose={() => setOpenBookingId(null)}
+          onRespond={respondRequest}
+          onSubmitFeedback={onSubmitFeedback}
+        />
       )}
     </div>
   );

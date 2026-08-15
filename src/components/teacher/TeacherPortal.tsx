@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { C } from "@/lib/constants";
 import { EditableAvatar } from "@/components/shared/Avatar";
 import { TeacherDashboard } from "@/components/teacher/TeacherDashboard";
+import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
 import type { Sub, Teacher, Booking } from "@/lib/types";
 
 export function TeacherPortal({
@@ -33,6 +35,9 @@ export function TeacherPortal({
   onLogout: () => void;
   onPhotoChange: (dataUri: string) => void;
 }) {
+  const [openBookingId, setOpenBookingId] = useState<string | null>(null);
+  const openBooking = requests.find((r) => r.id === openBookingId);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
@@ -59,9 +64,23 @@ export function TeacherPortal({
         sendMultiRequest={sendMultiRequest}
         teacherId={teacher.id}
         onCancelBooking={cancelRequest}
-        onSaveBookingDetails={updateRequestDetails}
-        onReassignBooking={reassignBooking}
+        onOpenBooking={setOpenBookingId}
       />
+
+      {openBooking && (
+        <BookingDetailModal
+          booking={openBooking}
+          teacher={teacher}
+          sub={subs.find((s) => s.id === openBooking.subId)}
+          subs={subs}
+          role="teacher"
+          currentUserName={teacher.name}
+          onClose={() => setOpenBookingId(null)}
+          onSaveDetails={updateRequestDetails}
+          onReassign={reassignBooking}
+          onCancel={cancelRequest}
+        />
+      )}
     </div>
   );
 }

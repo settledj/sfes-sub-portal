@@ -20,11 +20,13 @@ export function AdminSubModal({
   requests,
   onClose,
   onQuickBook,
+  onOpenBooking,
 }: {
   sub: Sub;
   requests: Booking[];
   onClose: () => void;
   onQuickBook: (sub: Sub) => void;
+  onOpenBooking: (id: string) => void;
 }) {
   const [viewMonth, setViewMonth] = useState(() => {
     const d = new Date();
@@ -106,7 +108,12 @@ export function AdminSubModal({
               {mine.map((r) => {
                 const meta = statusMeta[r.status] || statusMeta.pending;
                 return (
-                  <div key={r.id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: C.greyLight }}>
+                  <button
+                    key={r.id}
+                    onClick={() => onOpenBooking(r.id)}
+                    className="w-full text-left flex items-center justify-between rounded-lg px-3 py-2 hover:opacity-80 transition-opacity"
+                    style={{ backgroundColor: C.greyLight }}
+                  >
                     <div className="min-w-0">
                       <p className="text-xs font-semibold" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>{prettyDate(dkToDate(r.dk))}</p>
                       <p className="text-xs" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
@@ -116,7 +123,7 @@ export function AdminSubModal({
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap" style={{ backgroundColor: meta.bg, color: meta.color, fontFamily: "Barlow, sans-serif" }}>
                       {meta.label}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>

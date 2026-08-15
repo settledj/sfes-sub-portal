@@ -13,16 +13,14 @@ export function AdminTeacherModal({
   subs,
   onClose,
   onCancel,
-  onSaveDetails,
-  onReassign,
+  onOpenBooking,
 }: {
   teacher: Teacher;
   requests: Booking[];
   subs: Sub[];
   onClose: () => void;
   onCancel: (id: string) => void;
-  onSaveDetails: (id: string, details: { lessonPlan: string; schedule: string; attendance: string; notes: string }) => void;
-  onReassign: (id: string, newSubId: number) => void;
+  onOpenBooking: (id: string) => void;
 }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: "rgba(27,42,83,0.55)" }} onClick={onClose}>
@@ -45,7 +43,7 @@ export function AdminTeacherModal({
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>Schedule</p>
-          <TeacherSchedule teacherId={teacher.id} requests={requests} subs={subs} onCancel={onCancel} onSaveDetails={onSaveDetails} onReassign={onReassign} />
+          <TeacherSchedule teacherId={teacher.id} requests={requests} subs={subs} onCancel={onCancel} onOpenBooking={onOpenBooking} />
         </div>
       </div>
     </div>

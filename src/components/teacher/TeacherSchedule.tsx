@@ -6,7 +6,6 @@ import { C } from "@/lib/constants";
 import { dkToDate, prettyDate } from "@/lib/dates";
 import { Avatar } from "@/components/shared/Avatar";
 import { ConfirmCancelBookingModal } from "@/components/shared/ConfirmCancelBookingModal";
-import { BookingDetailModal } from "@/components/teacher/BookingDetailModal";
 import type { Sub, Booking } from "@/lib/types";
 
 const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
@@ -22,17 +21,14 @@ export function TeacherSchedule({
   requests,
   subs,
   onCancel,
-  onSaveDetails,
-  onReassign,
+  onOpenBooking,
 }: {
   teacherId: number;
   requests: Booking[];
   subs: Sub[];
   onCancel: (id: string) => void;
-  onSaveDetails: (id: string, details: { lessonPlan: string; schedule: string; attendance: string; notes: string }) => void;
-  onReassign: (id: string, newSubId: number) => void;
+  onOpenBooking: (id: string) => void;
 }) {
-  const [openBookingId, setOpenBookingId] = useState<string | null>(null);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
   const mine = requests.filter((r) => r.teacherId === teacherId).sort((a, b) => (a.dk > b.dk ? 1 : -1));
 
@@ -56,7 +52,7 @@ export function TeacherSchedule({
         return (
           <div
             key={r.id}
-            onClick={() => setOpenBookingId(r.id)}
+            onClick={() => onOpenBooking(r.id)}
             className="rounded-xl border bg-white p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow"
             style={{ borderColor: "#E3E5EA", opacity: r.status === "cancelled" || r.status === "declined" ? 0.7 : 1 }}
           >
@@ -94,16 +90,6 @@ export function TeacherSchedule({
           </div>
         );
       })}
-
-      {openBookingId && (
-        <BookingDetailModal
-          booking={mine.find((r) => r.id === openBookingId)!}
-          subs={subs}
-          onClose={() => setOpenBookingId(null)}
-          onSaveDetails={onSaveDetails}
-          onReassign={onReassign}
-        />
-      )}
 
       {cancelingId && (
         <ConfirmCancelBookingModal

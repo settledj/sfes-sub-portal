@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/authz";
+import { requireRole, teacherOwnsBooking } from "@/lib/authz";
 import { logNotification } from "@/lib/notify";
 import { serializeRequest } from "@/lib/serialize";
 import { dkToDate, prettyDate } from "@/lib/dates";
@@ -14,6 +14,9 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params;
   const existing = await prisma.request.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Request not found." }, { status: 404 });
+  if (!(await teacherOwnsBooking(check.session, existing.teacherId))) {
+    return NextResponse.json({ error: "Not your booking." }, { status: 403 });
+  }
 
   const updated = await prisma.request.update({ where: { id }, data: { status: "cancelled" } });
 

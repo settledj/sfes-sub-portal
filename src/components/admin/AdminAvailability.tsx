@@ -33,6 +33,7 @@ export function AdminAvailability({
   onCancel,
   onReschedule,
   onRebook,
+  onOpenBooking,
 }: {
   subs: Sub[];
   teachers: Teacher[];
@@ -54,6 +55,7 @@ export function AdminAvailability({
   onCancel: (id: string) => void;
   onReschedule: (id: string, update: { subId: number; dk: string }) => void;
   onRebook: (r: Booking) => void;
+  onOpenBooking: (id: string) => void;
 }) {
   return (
     <div>
@@ -129,6 +131,7 @@ export function AdminAvailability({
           onCancel={onCancel}
           onReschedule={onReschedule}
           onRebook={onRebook}
+          onOpenBooking={onOpenBooking}
         />
       ) : (
         <div className="rounded-xl border bg-white p-4" style={{ borderColor: "#E3E5EA" }}>
