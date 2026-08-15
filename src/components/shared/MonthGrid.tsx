@@ -66,16 +66,19 @@ export function MonthGrid({
             <button
               key={idx}
               onClick={() => {
+                if (isWeekend) return;
                 setSelectedDate(d);
                 onDayActivate?.(d);
               }}
+              disabled={isWeekend}
               className="relative rounded-lg py-1.5 flex flex-col items-center gap-0.5 border-2 transition-all"
               style={{
-                backgroundColor: isSelected ? C.navy : isBooked ? "#E8EEF8" : isWeekend ? "#F8F8F9" : "white",
+                backgroundColor: isSelected ? C.navy : isBooked ? "#E8EEF8" : isWeekend ? "#F2F3F5" : "white",
                 borderColor: isSelected ? (isBooked ? C.blue : C.navy) : isBooked ? C.blue : isToday ? C.gold : "#E3E5EA",
+                cursor: isWeekend ? "default" : "pointer",
               }}
             >
-              {showBookedCount && dayBookedCount > 0 && (
+              {showBookedCount && dayBookedCount > 0 && !isWeekend && (
                 <span
                   className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full text-[9px] font-bold text-white border-2 border-white"
                   style={{ width: 15, height: 15, backgroundColor: C.gold, fontFamily: "Barlow, sans-serif" }}
@@ -86,7 +89,7 @@ export function MonthGrid({
               )}
               <span
                 className="text-xs font-semibold"
-                style={{ color: isSelected ? "white" : isBooked ? C.blue : C.navy, fontFamily: "Barlow, sans-serif" }}
+                style={{ color: isSelected ? "white" : isBooked ? C.blue : isWeekend ? "#B7BAC2" : C.navy, fontFamily: "Barlow, sans-serif" }}
               >
                 {day}
               </span>

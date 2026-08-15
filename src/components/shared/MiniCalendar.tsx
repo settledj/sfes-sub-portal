@@ -50,21 +50,24 @@ export function MiniCalendar({
           if (day === null) return <div key={idx} />;
           const d = new Date(year, month, day);
           const dk = dateKey(d);
+          const isWeekend = d.getDay() === 0 || d.getDay() === 6;
           const status = effectiveStatus(sub.availability[dk]);
           const isPicked = isSelected(dk);
-          const bg = status === "booked" ? C.gold : status === "unavailable" ? C.red : C.teal;
+          const bg = isWeekend ? "#F2F3F5" : status === "booked" ? C.gold : status === "unavailable" ? C.red : C.teal;
           return (
             <button
               key={idx}
-              onClick={() => onSelect(d)}
+              onClick={() => !isWeekend && onSelect(d)}
+              disabled={isWeekend}
               className="aspect-square rounded-md text-xs font-medium flex items-center justify-center border transition-all"
               style={{
                 backgroundColor: bg,
-                color: "white",
+                color: isWeekend ? "#B7BAC2" : "white",
                 borderColor: isPicked ? "#FFE600" : bg,
                 borderWidth: isPicked ? 3 : 1,
                 boxShadow: isPicked ? "0 0 0 1px #FFE600" : "none",
                 fontFamily: "Barlow, sans-serif",
+                cursor: isWeekend ? "default" : "pointer",
               }}
             >
               {day}
