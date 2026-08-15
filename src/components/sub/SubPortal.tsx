@@ -35,12 +35,20 @@ export function SubPortal({
   });
   const [openDate, setOpenDate] = useState<Date | null>(null);
   const [calendarViewMode, setCalendarViewMode] = useState<"month" | "list">("month");
+  const [listStatusFilter, setListStatusFilter] = useState("all");
 
   const myRequests = requests.filter((r) => r.subId === sub.id).sort((a, b) => (a.dk > b.dk ? 1 : -1));
   const pending = myRequests.filter((r) => r.status === "pending");
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const upcoming = myRequests.filter((r) => r.status === "accepted" && dkToDate(r.dk) >= todayStart).slice(0, 2);
+
+  const filteredListRequests = myRequests.filter((r) => {
+    if (listStatusFilter === "all") return true;
+    if (listStatusFilter === "confirmed") return r.status === "accepted" && dkToDate(r.dk) >= todayStart;
+    if (listStatusFilter === "completed") return r.status === "accepted" && dkToDate(r.dk) < todayStart;
+    return r.status === listStatusFilter;
+  });
 
   const toggleSubject = (subject: string) => {
     const has = sub.subjects.includes(subject);
@@ -157,84 +165,13 @@ export function SubPortal({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="rounded-xl border bg-white p-5 h-fit" style={{ borderColor: "#E3E5EA" }}>
-          <div className="flex items-center gap-3">
-            <EditableAvatar person={sub} size={56} onPhotoChange={onPhotoChange} />
-            <div>
-              <p className="font-bold text-lg" style={{ fontFamily: "Barlow, sans-serif", color: C.navy }}>{sub.name}</p>
-              {sub.preferred && (
-                <p className="text-xs font-semibold flex items-center gap-1 mt-0.5" style={{ color: C.gold }}>
-                  <Star size={12} fill={C.gold} /> Preferred substitute
-                </p>
-              )}
-            </div>
-          </div>
-
-          <p className="text-xs font-semibold uppercase tracking-widest mt-4 mb-1" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
-            Bio <span style={{ fontWeight: 400, color: C.grey }}>(optional)</span>
-          </p>
-          <EditableField
-            value={sub.bio}
-            placeholder="Add a short bio for teachers to see..."
-            emptyLabel="Add a short bio for teachers to see..."
-            multiline
-            onSave={(bio) => onUpdateProfile({ bio })}
-          />
-
-          <div className="mt-4 space-y-1.5 text-sm" style={{ fontFamily: "PT Serif, serif", color: C.grey }}>
-            <div className="flex items-center gap-2">
-              <Phone size={13} className="shrink-0" />
-              <div className="flex-1 min-w-0">
-                <EditableField
-                  value={sub.phone}
-                  placeholder="(555) 555-5555"
-                  emptyLabel="Add a phone number"
-                  type="tel"
-                  onSave={(phone) => onUpdateProfile({ phone })}
-                />
-              </div>
-            </div>
-            <p className="flex items-center gap-2"><Mail size={13} /> {sub.email}</p>
-          </div>
-
-          <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
-            Divisions I can cover
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {DIVISIONS.map((d) => (
-              <SubjectChip key={d} label={d} active={(sub.division || []).includes(d)} onClick={() => toggleDivision(d)} tone={C.blue} />
-            ))}
-          </div>
-
-          <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
-            Subjects I can cover
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {SUBJECTS.map((s) => (
-              <SubjectChip key={s} label={s} active={sub.subjects.includes(s)} onClick={() => toggleSubject(s)} tone={C.blue} />
-            ))}
-          </div>
-
-          <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
-            Additional info
-          </p>
-          <textarea
-            defaultValue={sub.additionalInfo || ""}
-            onBlur={(e) => onUpdateProfile({ additionalInfo: e.target.value })}
-            rows={2}
-            placeholder="Scheduling notes, coaching conflicts, notice needed, etc."
-            className="w-full text-sm rounded-lg border p-2 outline-none resize-none"
-            style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "PT Serif, serif" }}
-          />
-        </div>
-
-        <div className="lg:col-span-2 rounded-xl border bg-white p-5" style={{ borderColor: "#E3E5EA" }}>
+      <div className="flex flex-col gap-6">
+        <div className="rounded-xl border bg-white p-5" style={{ borderColor: "#E3E5EA" }}>
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <p className="font-bold" style={{ fontFamily: "Barlow, sans-serif", color: C.navy }}>
               {calendarViewMode === "month" ? calendarMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "All bookings"}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center rounded-lg p-1" style={{ backgroundColor: C.greyLight }}>
                 <button
                   onClick={() => setCalendarViewMode("month")}
@@ -251,11 +188,25 @@ export function SubPortal({
                   <ClipboardList size={13} /> List
                 </button>
               </div>
-              {calendarViewMode === "month" && (
+              {calendarViewMode === "month" ? (
                 <div className="flex items-center gap-1">
                   <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded hover:bg-gray-100"><ChevronLeft size={18} color={C.navy} /></button>
                   <button onClick={() => shiftMonth(1)} className="p-1.5 rounded hover:bg-gray-100"><ChevronRight size={18} color={C.navy} /></button>
                 </div>
+              ) : (
+                <select
+                  value={listStatusFilter}
+                  onChange={(e) => setListStatusFilter(e.target.value)}
+                  className="text-xs px-2.5 py-1.5 rounded-lg border outline-none"
+                  style={{ borderColor: "#D9DCE3", color: C.navy, fontFamily: "Barlow, sans-serif" }}
+                >
+                  <option value="all">All bookings</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed (upcoming)</option>
+                  <option value="completed">Completed (past)</option>
+                  <option value="declined">Declined</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
               )}
             </div>
           </div>
@@ -265,13 +216,15 @@ export function SubPortal({
               <p className="text-xs mb-3" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
                 Every request and booking on your record, most recent first.
               </p>
-              {myRequests.length === 0 ? (
+              {filteredListRequests.length === 0 ? (
                 <div className="rounded-xl p-8 text-center" style={{ backgroundColor: C.greyLight }}>
-                  <p className="text-sm" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>No bookings yet.</p>
+                  <p className="text-sm" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
+                    {myRequests.length === 0 ? "No bookings yet." : "No bookings match this filter."}
+                  </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {myRequests.map((r) => {
+                  {filteredListRequests.map((r) => {
                     const meta = BOOKING_STATUS_META[r.status] || BOOKING_STATUS_META.pending;
                     return (
                       <button
@@ -346,6 +299,77 @@ export function SubPortal({
               </div>
             </>
           )}
+        </div>
+
+        <div className="rounded-xl border bg-white p-5" style={{ borderColor: "#E3E5EA" }}>
+          <div className="flex items-center gap-3">
+            <EditableAvatar person={sub} size={56} onPhotoChange={onPhotoChange} />
+            <div>
+              <p className="font-bold text-lg" style={{ fontFamily: "Barlow, sans-serif", color: C.navy }}>{sub.name}</p>
+              {sub.preferred && (
+                <p className="text-xs font-semibold flex items-center gap-1 mt-0.5" style={{ color: C.gold }}>
+                  <Star size={12} fill={C.gold} /> Preferred substitute
+                </p>
+              )}
+            </div>
+          </div>
+
+          <p className="text-xs font-semibold uppercase tracking-widest mt-4 mb-1" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+            Bio <span style={{ fontWeight: 400, color: C.grey }}>(optional)</span>
+          </p>
+          <EditableField
+            value={sub.bio}
+            placeholder="Add a short bio for teachers to see..."
+            emptyLabel="Add a short bio for teachers to see..."
+            multiline
+            onSave={(bio) => onUpdateProfile({ bio })}
+          />
+
+          <div className="mt-4 space-y-1.5 text-sm" style={{ fontFamily: "PT Serif, serif", color: C.grey }}>
+            <div className="flex items-center gap-2">
+              <Phone size={13} className="shrink-0" />
+              <div className="flex-1 min-w-0">
+                <EditableField
+                  value={sub.phone}
+                  placeholder="(555) 555-5555"
+                  emptyLabel="Add a phone number"
+                  type="tel"
+                  onSave={(phone) => onUpdateProfile({ phone })}
+                />
+              </div>
+            </div>
+            <p className="flex items-center gap-2"><Mail size={13} /> {sub.email}</p>
+          </div>
+
+          <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+            Divisions I can cover
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {DIVISIONS.map((d) => (
+              <SubjectChip key={d} label={d} active={(sub.division || []).includes(d)} onClick={() => toggleDivision(d)} tone={C.blue} />
+            ))}
+          </div>
+
+          <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+            Subjects I can cover
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {SUBJECTS.map((s) => (
+              <SubjectChip key={s} label={s} active={sub.subjects.includes(s)} onClick={() => toggleSubject(s)} tone={C.blue} />
+            ))}
+          </div>
+
+          <p className="text-xs font-semibold uppercase tracking-widest mt-5 mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+            Additional info
+          </p>
+          <textarea
+            defaultValue={sub.additionalInfo || ""}
+            onBlur={(e) => onUpdateProfile({ additionalInfo: e.target.value })}
+            rows={2}
+            placeholder="Scheduling notes, coaching conflicts, notice needed, etc."
+            className="w-full text-sm rounded-lg border p-2 outline-none resize-none"
+            style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "PT Serif, serif" }}
+          />
         </div>
       </div>
 
