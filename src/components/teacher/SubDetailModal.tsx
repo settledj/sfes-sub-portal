@@ -117,12 +117,14 @@ export function SubDetailModal({
 
   const dk = dateKey(pickedDate);
   const status = effectiveStatus(sub.availability[dk]);
-  const existingRequest = requests.find((r) => r.subId === sub.id && r.dk === dk);
+  // A cancelled request shouldn't keep blocking its date — cancelling is what
+  // frees it back up (see the cancel API route, which clears availability).
+  const existingRequest = requests.find((r) => r.subId === sub.id && r.dk === dk && r.status !== "cancelled");
   const canRequest = isRequestable(sub.availability[dk]) && !existingRequest;
 
   const isDateRequestable = (d: Date) => {
     const k = dateKey(d);
-    return isRequestable(sub.availability[k]) && !requests.find((r) => r.subId === sub.id && r.dk === k);
+    return isRequestable(sub.availability[k]) && !requests.find((r) => r.subId === sub.id && r.dk === k && r.status !== "cancelled");
   };
 
   const toggleMultiMode = () => {

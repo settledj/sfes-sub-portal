@@ -61,8 +61,9 @@ export function MiniCalendar({
               style={{
                 backgroundColor: bg,
                 color: "white",
-                borderColor: isPicked ? C.navy : bg,
-                borderWidth: isPicked ? 2 : 1,
+                borderColor: isPicked ? "#FFE600" : bg,
+                borderWidth: isPicked ? 3 : 1,
+                boxShadow: isPicked ? "0 0 0 1px #FFE600" : "none",
                 fontFamily: "Barlow, sans-serif",
               }}
             >
