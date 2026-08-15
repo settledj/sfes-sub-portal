@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { C } from "@/lib/constants";
 import { dateKey, isSameDay } from "@/lib/dates";
-import { isRequestable } from "@/lib/availability";
+import { effectiveStatus, isRequestable } from "@/lib/availability";
 import type { Sub } from "@/lib/types";
 
 export function MonthGrid({
@@ -11,6 +11,8 @@ export function MonthGrid({
   selectedDate,
   setSelectedDate,
   bookedDates,
+  showBookedCount = false,
+  onDayActivate,
 }: {
   subs: Sub[];
   viewMonth: Date;
@@ -18,6 +20,8 @@ export function MonthGrid({
   selectedDate: Date;
   setSelectedDate: (d: Date) => void;
   bookedDates?: Set<string>;
+  showBookedCount?: boolean;
+  onDayActivate?: (d: Date) => void;
 }) {
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
@@ -54,19 +58,32 @@ export function MonthGrid({
           const dk = dateKey(d);
           const isWeekend = d.getDay() === 0 || d.getDay() === 6;
           const availableCount = subs.filter((s) => isRequestable(s.availability[dk])).length;
+          const dayBookedCount = subs.filter((s) => effectiveStatus(s.availability[dk]) === "booked").length;
           const isSelected = isSameDay(d, selectedDate);
           const isToday = isSameDay(d, new Date());
           const isBooked = bookedDates?.has(dk);
           return (
             <button
               key={idx}
-              onClick={() => setSelectedDate(d)}
+              onClick={() => {
+                setSelectedDate(d);
+                onDayActivate?.(d);
+              }}
               className="relative rounded-lg py-1.5 flex flex-col items-center gap-0.5 border-2 transition-all"
               style={{
                 backgroundColor: isSelected ? C.navy : isBooked ? "#E8EEF8" : isWeekend ? "#F8F8F9" : "white",
                 borderColor: isSelected ? (isBooked ? C.blue : C.navy) : isBooked ? C.blue : isToday ? C.gold : "#E3E5EA",
               }}
             >
+              {showBookedCount && dayBookedCount > 0 && (
+                <span
+                  className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full text-[9px] font-bold text-white border-2 border-white"
+                  style={{ width: 15, height: 15, backgroundColor: C.gold, fontFamily: "Barlow, sans-serif" }}
+                  title={`${dayBookedCount} booked`}
+                >
+                  {dayBookedCount}
+                </span>
+              )}
               <span
                 className="text-xs font-semibold"
                 style={{ color: isSelected ? "white" : isBooked ? C.blue : C.navy, fontFamily: "Barlow, sans-serif" }}
