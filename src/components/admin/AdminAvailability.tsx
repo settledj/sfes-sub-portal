@@ -11,13 +11,9 @@ import type { Sub, Teacher, Booking } from "@/lib/types";
 export type AdminViewMode = "week" | "month" | "list";
 
 // The banner + Week/Month/List toggle + the calendar widget (or, in List
-// mode, the full bookings manager). The substitute search/filter/directory
-// that used to live directly below this is now a separate trailing section
-// — see AdminSubstituteDirectory — so it can sit after the selected tab's
-// own content instead of pushing it down the page.
+// mode, the full bookings manager).
 export function AdminAvailability({
   subs,
-  filteredSubs,
   teachers,
   requests,
   availableCount,
@@ -39,7 +35,6 @@ export function AdminAvailability({
   onRebook,
 }: {
   subs: Sub[];
-  filteredSubs: Sub[];
   teachers: Teacher[];
   requests: Booking[];
   availableCount: number;
@@ -69,7 +64,7 @@ export function AdminAvailability({
               Real-time snapshot
             </p>
             <p className="text-white text-2xl font-bold mt-1" style={{ fontFamily: "Barlow, sans-serif" }}>
-              {availableCount} of {filteredSubs.length} subs available
+              {availableCount} of {subs.length} subs available
             </p>
             <p className="text-sm mt-0.5" style={{ color: "#C7CEDE" }}>
               {isToday ? "Today, " : ""}
@@ -149,7 +144,7 @@ export function AdminAvailability({
                 </div>
               </div>
               <WeekStrip
-                subs={filteredSubs}
+                subs={subs}
                 selectedDate={selectedDate}
                 setSelectedDate={setSelectedDate}
                 showBookedCount
@@ -158,7 +153,7 @@ export function AdminAvailability({
             </>
           ) : (
             <MonthGrid
-              subs={filteredSubs}
+              subs={subs}
               viewMonth={viewMonth}
               setViewMonth={setViewMonth}
               selectedDate={selectedDate}

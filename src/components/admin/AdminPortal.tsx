@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Search, Bell, PlusCircle, ShieldCheck } from "lucide-react";
 import { C } from "@/lib/constants";
 import { addDays, dateKey } from "@/lib/dates";
 import { isRequestable } from "@/lib/availability";
 import { AdminAvailability, type AdminViewMode } from "@/components/admin/AdminAvailability";
-import { AdminSubstituteDirectory } from "@/components/admin/AdminSubstituteDirectory";
 import { AdminDayModal } from "@/components/admin/AdminDayModal";
 import { AdminPeople } from "@/components/admin/AdminPeople";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
@@ -50,12 +49,6 @@ export function AdminPortal({
   const [tab, setTab] = useState<"people" | "notifications" | "new" | "access">("people");
   const [prefill, setPrefill] = useState<NewBookingPrefill | null>(null);
 
-  // Shared by the snapshot's calendar widget and the substitute directory
-  // below the tab content, so both stay in sync even though they're no
-  // longer rendered next to each other.
-  const [query, setQuery] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState("All");
-  const [divisionFilter, setDivisionFilter] = useState("All");
   const [viewMode, setViewMode] = useState<AdminViewMode>("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMonth, setViewMonth] = useState(() => {
@@ -69,16 +62,7 @@ export function AdminPortal({
   const isToday = dateKey(selectedDate) === dateKey(today);
   const dk = dateKey(selectedDate);
 
-  const filteredSubs = useMemo(() => {
-    return subs.filter((s) => {
-      const matchesQuery = s.name.toLowerCase().includes(query.toLowerCase());
-      const matchesSubject = subjectFilter === "All" || s.subjects.length === 0 || s.subjects.includes(subjectFilter);
-      const matchesDivision = divisionFilter === "All" || (s.division || []).includes(divisionFilter);
-      return matchesQuery && matchesSubject && matchesDivision;
-    });
-  }, [subs, query, subjectFilter, divisionFilter]);
-
-  const availableCount = filteredSubs.filter((s) => isRequestable(s.availability[dk])).length;
+  const availableCount = subs.filter((s) => isRequestable(s.availability[dk])).length;
 
   const jumpToDate = (value: string) => {
     if (!value) return;
@@ -141,7 +125,6 @@ export function AdminPortal({
       <div className="mb-8 pb-8" style={{ borderBottom: "1px solid #E3E5EA" }}>
         <AdminAvailability
           subs={subs}
-          filteredSubs={filteredSubs}
           teachers={teachers}
           requests={requests}
           availableCount={availableCount}
@@ -173,24 +156,6 @@ export function AdminPortal({
       )}
       {tab === "access" && (
         <AdminAccess users={allowedUsers} onAdd={onAddAllowedUser} onRemove={onRemoveAllowedUser} onSetPassword={onSetAllowedUserPassword} />
-      )}
-
-      {viewMode !== "list" && (
-        <div className="mt-8 pt-8" style={{ borderTop: "1px solid #E3E5EA" }}>
-          <AdminSubstituteDirectory
-            subs={filteredSubs}
-            requests={requests}
-            dk={dk}
-            selectedDate={selectedDate}
-            query={query}
-            setQuery={setQuery}
-            subjectFilter={subjectFilter}
-            setSubjectFilter={setSubjectFilter}
-            divisionFilter={divisionFilter}
-            setDivisionFilter={setDivisionFilter}
-            onQuickBookSub={handleQuickBookSub}
-          />
-        </div>
       )}
 
       {openDayDate && (
