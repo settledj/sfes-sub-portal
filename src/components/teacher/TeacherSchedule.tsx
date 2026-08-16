@@ -61,13 +61,10 @@ export function TeacherSchedule({
               <p className="text-sm font-semibold" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
                 {prettyDate(date)}
               </p>
-              <p className="text-xs" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
+              <p className="text-xs truncate" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
                 {sub ? sub.name : "Unknown substitute"}
                 {(r.subject || r.grade) && ` · ${[r.subject, r.grade].filter(Boolean).join(" · ")}`}
               </p>
-              {r.notes && (
-                <p className="text-xs mt-0.5" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>{r.notes}</p>
-              )}
             </div>
             <span
               className="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
