@@ -40,6 +40,12 @@ function outlineButton(label: string, href: string, color: string): string {
   return `<a href="${href}" style="display:inline-block;background-color:#ffffff;color:${color};border:1.5px solid ${color};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;padding:10.5px 22px;border-radius:8px;margin:4px 10px 4px 0;">${label}</a>`;
 }
 
+// Every dynamic value below (names, subjects, grades, message text) is
+// user-entered — always escape before interpolating into html.
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function calendarLinksHtml(links: CalendarLinks): string {
   return `<p style="margin:22px 0 6px;font-size:13px;color:${C.grey};font-family:Arial,Helvetica,sans-serif;">Add to calendar:</p>
 <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;">
@@ -66,8 +72,8 @@ export function adminBookedEmail({
   const text = `The office booked you for ${teacherName || "a class"} on ${dateLabel}${subjectLine ? ` (${subjectLine})` : ""}. Add to calendar: ${calendarLinks.google}`;
   const html = shell(
     subject,
-    `<p>Hi ${subName},</p>
-<p>The office booked you for <strong>${teacherName || "a class"}</strong> on <strong>${dateLabel}</strong>${subjectLine ? ` (${subjectLine})` : ""}.</p>
+    `<p>Hi ${escapeHtml(subName)},</p>
+<p>The office booked you for <strong>${escapeHtml(teacherName || "a class")}</strong> on <strong>${escapeHtml(dateLabel)}</strong>${subjectLine ? ` (${escapeHtml(subjectLine)})` : ""}.</p>
 ${calendarLinksHtml(calendarLinks)}`
   );
   return { subject, text, html };
@@ -92,8 +98,8 @@ export function requestSentEmail({
   const text = `${teacherName || "A teacher"} requested you to sub on ${dateLabel}${subjectLine ? ` for ${subjectLine}` : ""}${gradeLine ? ` (${gradeLine})` : ""}. Accept: ${respondUrl}?action=accept — Decline: ${respondUrl}?action=decline`;
   const html = shell(
     subject,
-    `<p>Hi ${subName},</p>
-<p><strong>${teacherName || "A teacher"}</strong> requested you to sub on <strong>${dateLabel}</strong>${subjectLine ? ` for ${subjectLine}` : ""}${gradeLine ? ` (${gradeLine})` : ""}.</p>
+    `<p>Hi ${escapeHtml(subName)},</p>
+<p><strong>${escapeHtml(teacherName || "A teacher")}</strong> requested you to sub on <strong>${escapeHtml(dateLabel)}</strong>${subjectLine ? ` for ${escapeHtml(subjectLine)}` : ""}${gradeLine ? ` (${escapeHtml(gradeLine)})` : ""}.</p>
 <div style="margin:22px 0 8px;">
 ${solidButton("Accept", `${respondUrl}?action=accept`, C.teal)}
 ${outlineButton("Decline", `${respondUrl}?action=decline`, C.red)}
@@ -118,8 +124,8 @@ export function requestAcceptedEmail({
   const text = `${subName} has confirmed your request for ${dateLabel}. Add to calendar: ${calendarLinks.google}`;
   const html = shell(
     subject,
-    `<p>Hi ${teacherName},</p>
-<p><strong>${subName}</strong> has confirmed your request for <strong>${dateLabel}</strong>.</p>
+    `<p>Hi ${escapeHtml(teacherName)},</p>
+<p><strong>${escapeHtml(subName)}</strong> has confirmed your request for <strong>${escapeHtml(dateLabel)}</strong>.</p>
 ${calendarLinksHtml(calendarLinks)}`
   );
   return { subject, text, html };
@@ -138,8 +144,8 @@ export function requestDeclinedEmail({
   const text = `${subName} has declined your request for ${dateLabel}.`;
   const html = shell(
     subject,
-    `<p>Hi ${teacherName},</p>
-<p><strong>${subName}</strong> has declined your request for <strong>${dateLabel}</strong>. Head back to the portal to find another substitute.</p>`
+    `<p>Hi ${escapeHtml(teacherName)},</p>
+<p><strong>${escapeHtml(subName)}</strong> has declined your request for <strong>${escapeHtml(dateLabel)}</strong>. Head back to the portal to find another substitute.</p>`
   );
   return { subject, text, html };
 }
@@ -159,8 +165,8 @@ export function subConfirmationEmail({
   const text = `You're confirmed to sub for ${teacherName} on ${dateLabel}. Add to calendar: ${calendarLinks.google}`;
   const html = shell(
     subject,
-    `<p>Hi ${subName},</p>
-<p>You're confirmed to sub for <strong>${teacherName}</strong> on <strong>${dateLabel}</strong>.</p>
+    `<p>Hi ${escapeHtml(subName)},</p>
+<p>You're confirmed to sub for <strong>${escapeHtml(teacherName)}</strong> on <strong>${escapeHtml(dateLabel)}</strong>.</p>
 ${calendarLinksHtml(calendarLinks)}`
   );
   return { subject, text, html };
@@ -179,8 +185,8 @@ export function subDeclineAckEmail({
   const text = `You declined ${teacherName}'s request for ${dateLabel}. No action needed.`;
   const html = shell(
     subject,
-    `<p>Hi ${subName},</p>
-<p>You declined <strong>${teacherName}</strong>'s request for <strong>${dateLabel}</strong>. No action needed — the teacher has been notified.</p>`
+    `<p>Hi ${escapeHtml(subName)},</p>
+<p>You declined <strong>${escapeHtml(teacherName)}</strong>'s request for <strong>${escapeHtml(dateLabel)}</strong>. No action needed — the teacher has been notified.</p>`
   );
   return { subject, text, html };
 }
@@ -201,10 +207,39 @@ export function bookingCancelledEmail({
     perspective === "sub"
       ? `${otherName || "The teacher"}'s request for you on ${dateLabel} has been cancelled.`
       : `The booking with ${otherName || "your substitute"} on ${dateLabel} has been cancelled.`;
+  const htmlText =
+    perspective === "sub"
+      ? `${escapeHtml(otherName || "The teacher")}'s request for you on <strong>${escapeHtml(dateLabel)}</strong> has been cancelled.`
+      : `The booking with ${escapeHtml(otherName || "your substitute")} on <strong>${escapeHtml(dateLabel)}</strong> has been cancelled.`;
   const html = shell(
     subject,
-    `<p>Hi ${toName},</p>
-<p>${text}</p>`
+    `<p>Hi ${escapeHtml(toName)},</p>
+<p>${htmlText}</p>`
+  );
+  return { subject, text, html };
+}
+
+export function newMessageEmail({
+  toName,
+  senderName,
+  dateLabel,
+  messageBody,
+  portalUrl,
+}: {
+  toName: string;
+  senderName: string;
+  dateLabel: string;
+  messageBody: string;
+  portalUrl: string;
+}): EmailContent {
+  const subject = "New message about your booking";
+  const text = `${senderName} sent a message about your booking on ${dateLabel}: "${messageBody}" — Reply in the portal: ${portalUrl}`;
+  const html = shell(
+    subject,
+    `<p>Hi ${escapeHtml(toName)},</p>
+<p><strong>${escapeHtml(senderName)}</strong> sent a message about your booking on <strong>${escapeHtml(dateLabel)}</strong>:</p>
+<div style="margin:16px 0;padding:12px 16px;background-color:${C.greyLight};border-radius:8px;color:#3F4552;white-space:pre-wrap;">${escapeHtml(messageBody)}</div>
+<div style="margin-top:20px;">${solidButton("Reply in portal", portalUrl, C.navy)}</div>`
   );
   return { subject, text, html };
 }

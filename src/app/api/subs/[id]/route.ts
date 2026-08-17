@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/authz";
 import { serializeSub } from "@/lib/serialize";
 
-// Sub-editable profile fields: bio, subjects, division, additionalInfo, photo, phone.
+// Sub-editable profile fields: bio, subjects, division, additionalInfo, photo,
+// phone, plus their own notification preferences.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const check = await requireRole(["substitute", "admin"]);
   if (check instanceof NextResponse) return check;
@@ -19,7 +20,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const body = await req.json();
   const data: Record<string, unknown> = {};
-  for (const key of ["bio", "subjects", "division", "additionalInfo", "photo", "phone", "preferred"]) {
+  for (const key of ["bio", "subjects", "division", "additionalInfo", "photo", "phone", "preferred", "notifyBookingUpdates", "notifyMessages"]) {
     if (key in body) data[key] = body[key];
   }
 

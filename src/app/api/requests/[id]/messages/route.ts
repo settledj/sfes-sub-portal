@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAnySession, teacherOwnsBooking, subOwnsBooking, type Session } from "@/lib/authz";
 import { serializeMessage } from "@/lib/serialize";
+import { logNotification } from "@/lib/notify";
+import { newMessageEmail } from "@/lib/emailTemplates";
+import { getAppUrl } from "@/lib/appUrl";
+import { dkToDate, prettyDate } from "@/lib/dates";
 
 // Any of the three legitimate participants on a booking — the teacher who
 // made it, the substitute assigned to it, or an admin — may read or post to
@@ -34,7 +38,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (check instanceof NextResponse) return check;
 
   const { id } = await params;
-  const { error } = await loadAuthorized(id, check.session);
+  const { error, existing } = await loadAuthorized(id, check.session);
   if (error) return error;
 
   const { body } = await req.json();
@@ -44,16 +48,45 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { role, email } = check.session.user;
   if (!role || !email) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
+  const [teacher, sub] = await Promise.all([
+    prisma.teacher.findUnique({ where: { id: existing!.teacherId } }),
+    prisma.substitute.findUnique({ where: { id: existing!.subId } }),
+  ]);
+
   const senderName =
-    role === "teacher"
-      ? (await prisma.teacher.findUnique({ where: { email } }))?.name
-      : role === "substitute"
-      ? (await prisma.substitute.findUnique({ where: { email } }))?.name
-      : (await prisma.admin.findUnique({ where: { email } }))?.name;
+    role === "teacher" ? teacher?.name : role === "substitute" ? sub?.name : (await prisma.admin.findUnique({ where: { email } }))?.name;
 
   const message = await prisma.message.create({
     data: { requestId: id, senderRole: role, senderName: senderName || email, body: text },
   });
+
+  // Notify whoever didn't send it — both, if an admin sent it.
+  const dateLabel = prettyDate(dkToDate(existing!.dk));
+  const recipients = [];
+  if (role !== "teacher" && teacher) recipients.push({ record: teacher, portalPath: "/teacher" });
+  if (role !== "substitute" && sub) recipients.push({ record: sub, portalPath: "/sub" });
+
+  await Promise.all(
+    recipients.map(({ record, portalPath }) => {
+      const content = newMessageEmail({
+        toName: record.name,
+        senderName: senderName || email,
+        dateLabel,
+        messageBody: text,
+        portalUrl: `${getAppUrl()}${portalPath}`,
+      });
+      return logNotification(prisma, {
+        event: "new_message",
+        toName: record.name,
+        toEmail: record.email,
+        toPhone: record.phone,
+        subject: content.subject,
+        body: content.text,
+        html: content.html,
+        enabled: record.notifyMessages,
+      });
+    })
+  );
 
   return NextResponse.json(serializeMessage(message), { status: 201 });
 }

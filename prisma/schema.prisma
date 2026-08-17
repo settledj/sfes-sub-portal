@@ -30,6 +30,12 @@ model Substitute {
   accent         String   @default("#1B2A53")
   photo          String?
   availability   Json     @default("{}")
+  // Notification preferences — "Booking updates" covers new requests, admin
+  // bookings, accept/decline confirmations, and cancellations; "Messages"
+  // covers the booking message thread. Split in two (not per-event-type) so
+  // people can mute chatty conversations without missing booking changes.
+  notifyBookingUpdates Boolean @default(true)
+  notifyMessages       Boolean @default(true)
   requests       Request[]
 
   @@map("substitutes")
@@ -45,6 +51,8 @@ model Teacher {
   initials String
   accent   String    @default("#1B2A53")
   photo    String?
+  notifyBookingUpdates Boolean @default(true)
+  notifyMessages       Boolean @default(true)
   requests Request[]
 
   @@map("teachers")

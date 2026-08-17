@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/authz";
 import { serializeTeacher } from "@/lib/serialize";
 
-// Teacher-editable field: photo (via EditableAvatar).
+// Teacher-editable fields: photo (via EditableAvatar) and their own notification preferences.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const check = await requireRole(["teacher", "admin"]);
   if (check instanceof NextResponse) return check;
@@ -17,8 +17,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
   }
 
-  const { photo } = await req.json();
+  const body = await req.json();
+  const data: Record<string, unknown> = {};
+  for (const key of ["photo", "notifyBookingUpdates", "notifyMessages"]) {
+    if (key in body) data[key] = body[key];
+  }
 
-  const updated = await prisma.teacher.update({ where: { id: Number(id) }, data: { photo } });
+  const updated = await prisma.teacher.update({ where: { id: Number(id) }, data });
   return NextResponse.json(serializeTeacher(updated));
 }

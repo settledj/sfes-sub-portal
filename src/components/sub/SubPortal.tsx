@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, Star, Phone, Mail, Grid3x3, ClipboardList, ChevronLeft, ChevronRight, Check, Ban } from "lucide-react";
+import { LogOut, Star, Phone, Mail, Grid3x3, ClipboardList, ChevronLeft, ChevronRight, Check, Ban, Bell } from "lucide-react";
 import { C, SUBJECTS, DIVISIONS, BOOKING_STATUS_META } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate } from "@/lib/dates";
 import { effectiveStatus } from "@/lib/availability";
 import { EditableAvatar } from "@/components/shared/Avatar";
 import { EditableField } from "@/components/shared/EditableField";
 import { SubjectChip } from "@/components/shared/SubjectChip";
+import { NotificationPreferences } from "@/components/shared/NotificationPreferences";
 import { SubDayModal } from "@/components/sub/SubDayModal";
 import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
 import type { Sub, Teacher, Booking } from "@/lib/types";
@@ -28,7 +29,9 @@ export function SubPortal({
   requests: Booking[];
   respondRequest: (requestId: string, accept: boolean) => void;
   onLogout: () => void;
-  onUpdateProfile: (updates: Partial<Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo" | "phone">>) => void;
+  onUpdateProfile: (
+    updates: Partial<Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo" | "phone" | "notifyBookingUpdates" | "notifyMessages">>
+  ) => void;
   onSetDayStatus: (dk: string, status: "available" | "unavailable") => void;
   onPhotoChange: (dataUri: string) => void;
   onSubmitFeedback: (id: string, feedback: string) => Promise<void>;
@@ -42,6 +45,7 @@ export function SubPortal({
   const [openBookingId, setOpenBookingId] = useState<string | null>(null);
   const [calendarViewMode, setCalendarViewMode] = useState<"month" | "list">("month");
   const [listStatusFilter, setListStatusFilter] = useState("all");
+  const [showPreferences, setShowPreferences] = useState(false);
 
   const myRequests = requests.filter((r) => r.subId === sub.id).sort((a, b) => (a.dk > b.dk ? 1 : -1));
   const openBooking = myRequests.find((r) => r.id === openBookingId);
@@ -85,14 +89,33 @@ export function SubPortal({
             <p className="text-xs" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>{(sub.division || []).join(", ") || "Substitute"}</p>
           </div>
         </div>
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
-          style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: `1.5px solid #D9DCE3` }}
-        >
-          <LogOut size={14} /> Log out
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowPreferences((v) => !v)}
+            className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
+            style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: `1.5px solid #D9DCE3` }}
+          >
+            <Bell size={14} /> Notifications
+          </button>
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
+            style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: `1.5px solid #D9DCE3` }}
+          >
+            <LogOut size={14} /> Log out
+          </button>
+        </div>
       </div>
+
+      {showPreferences && (
+        <div className="mb-6">
+          <NotificationPreferences
+            notifyBookingUpdates={sub.notifyBookingUpdates}
+            notifyMessages={sub.notifyMessages}
+            onChange={onUpdateProfile}
+          />
+        </div>
+      )}
 
       {pending.length > 0 && (
         <div className="rounded-xl p-4 mb-6" style={{ backgroundColor: "#FBF2DF", border: `1px solid #EFDDB0` }}>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Bell } from "lucide-react";
 import { C } from "@/lib/constants";
 import { EditableAvatar } from "@/components/shared/Avatar";
+import { NotificationPreferences } from "@/components/shared/NotificationPreferences";
 import { TeacherDashboard } from "@/components/teacher/TeacherDashboard";
 import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
 import type { Sub, Teacher, Booking } from "@/lib/types";
@@ -19,6 +20,7 @@ export function TeacherPortal({
   reassignBooking,
   onLogout,
   onPhotoChange,
+  onUpdatePreferences,
 }: {
   teacher: Teacher;
   subs: Sub[];
@@ -34,8 +36,10 @@ export function TeacherPortal({
   reassignBooking: (id: string, newSubId: number) => void;
   onLogout: () => void;
   onPhotoChange: (dataUri: string) => void;
+  onUpdatePreferences: (updates: { notifyBookingUpdates?: boolean; notifyMessages?: boolean }) => void;
 }) {
   const [openBookingId, setOpenBookingId] = useState<string | null>(null);
+  const [showPreferences, setShowPreferences] = useState(false);
   const openBooking = requests.find((r) => r.id === openBookingId);
 
   return (
@@ -48,14 +52,33 @@ export function TeacherPortal({
             <p className="text-xs" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>{[teacher.subject, teacher.room].filter(Boolean).join(" · ")}</p>
           </div>
         </div>
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
-          style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: "1.5px solid #D9DCE3" }}
-        >
-          <LogOut size={14} /> Log out
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowPreferences((v) => !v)}
+            className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
+            style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: "1.5px solid #D9DCE3" }}
+          >
+            <Bell size={14} /> Notifications
+          </button>
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
+            style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: "1.5px solid #D9DCE3" }}
+          >
+            <LogOut size={14} /> Log out
+          </button>
+        </div>
       </div>
+
+      {showPreferences && (
+        <div className="mb-5">
+          <NotificationPreferences
+            notifyBookingUpdates={teacher.notifyBookingUpdates}
+            notifyMessages={teacher.notifyMessages}
+            onChange={onUpdatePreferences}
+          />
+        </div>
+      )}
 
       <TeacherDashboard
         subs={subs}

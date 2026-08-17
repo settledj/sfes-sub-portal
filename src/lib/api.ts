@@ -89,7 +89,9 @@ export function submitFeedback(id: string, subFeedback: string) {
 
 export function updateSubProfile(
   id: number,
-  updates: Partial<Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo" | "photo" | "phone">>
+  updates: Partial<
+    Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo" | "photo" | "phone" | "notifyBookingUpdates" | "notifyMessages">
+  >
 ) {
   return json<Sub>(patch(`/api/subs/${id}`, updates));
 }
@@ -98,8 +100,8 @@ export function setSubAvailability(id: number, dk: string, status: "available" |
   return json<Sub>(post(`/api/subs/${id}/availability`, { dk, status }));
 }
 
-export function updateTeacherPhoto(id: number, photo: string) {
-  return json<Teacher>(patch(`/api/teachers/${id}`, { photo }));
+export function updateTeacherProfile(id: number, updates: Partial<Pick<Teacher, "photo" | "notifyBookingUpdates" | "notifyMessages">>) {
+  return json<Teacher>(patch(`/api/teachers/${id}`, updates));
 }
 
 export interface AllowedUserRow {

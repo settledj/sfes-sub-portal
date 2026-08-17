@@ -68,7 +68,11 @@ export function TeacherPortalClient({ teacher }: { teacher: Teacher }) {
       }}
       onLogout={() => signOut({ callbackUrl: "/signin" })}
       onPhotoChange={async (dataUri) => {
-        const updated = await api.updateTeacherPhoto(liveTeacher.id, dataUri);
+        const updated = await api.updateTeacherProfile(liveTeacher.id, { photo: dataUri });
+        setState((s) => ({ ...s, teachers: s.teachers.map((t) => (t.id === liveTeacher.id ? updated : t)) }));
+      }}
+      onUpdatePreferences={async (updates) => {
+        const updated = await api.updateTeacherProfile(liveTeacher.id, updates);
         setState((s) => ({ ...s, teachers: s.teachers.map((t) => (t.id === liveTeacher.id ? updated : t)) }));
       }}
     />

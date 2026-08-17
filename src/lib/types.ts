@@ -16,6 +16,8 @@ export interface Sub {
   accent: string;
   photo: string | null;
   availability: AvailabilityMap;
+  notifyBookingUpdates: boolean;
+  notifyMessages: boolean;
 }
 
 export interface Teacher {
@@ -28,6 +30,8 @@ export interface Teacher {
   initials: string;
   accent: string;
   photo: string | null;
+  notifyBookingUpdates: boolean;
+  notifyMessages: boolean;
 }
 
 export interface Admin {

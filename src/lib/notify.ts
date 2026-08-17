@@ -10,6 +10,11 @@ interface NotificationInput {
   // Optional HTML version (calendar links, accept/decline buttons, etc.) —
   // sent alongside the plain-text body for clients that render it.
   html?: string;
+  // The recipient's own preference for this notification category (see
+  // notifyBookingUpdates/notifyMessages on Teacher/Substitute) — defaults to
+  // true when omitted. When false, still logs the audit-trail row but skips
+  // the actual send, same as a missing API key or recipient address.
+  enabled?: boolean;
 }
 
 type DeliveryResult = { status: "sent" | "failed" | "skipped"; error: string | null };
@@ -42,6 +47,8 @@ export async function logNotification(prisma: PrismaClient, entry: NotificationI
 }
 
 async function sendEmail(entry: NotificationInput): Promise<DeliveryResult> {
+  if (entry.enabled === false) return { status: "skipped", error: "Recipient has disabled this notification type." };
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey || !entry.toEmail) return { status: "skipped", error: null };
 
@@ -69,6 +76,8 @@ async function sendEmail(entry: NotificationInput): Promise<DeliveryResult> {
 }
 
 async function sendSms(entry: NotificationInput): Promise<DeliveryResult> {
+  if (entry.enabled === false) return { status: "skipped", error: "Recipient has disabled this notification type." };
+
   const sid = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
   const from = process.env.TWILIO_FROM_NUMBER;

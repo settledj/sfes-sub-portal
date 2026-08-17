@@ -45,6 +45,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
           subject: content.subject,
           body: content.text,
           html: content.html,
+          enabled: sub.notifyBookingUpdates,
         });
       })(),
     teacher &&
@@ -58,6 +59,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
           subject: content.subject,
           body: content.text,
           html: content.html,
+          enabled: teacher.notifyBookingUpdates,
         });
       })(),
   ]);

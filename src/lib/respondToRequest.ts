@@ -54,6 +54,7 @@ export async function respondToRequest(id: string, accept: boolean) {
       subject: content.subject,
       body: content.text,
       html: content.html,
+      enabled: teacher.notifyBookingUpdates,
     });
   }
 
@@ -70,6 +71,7 @@ export async function respondToRequest(id: string, accept: boolean) {
       subject: content.subject,
       body: content.text,
       html: content.html,
+      enabled: sub.notifyBookingUpdates,
     });
   }
 

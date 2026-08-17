@@ -71,6 +71,7 @@ export async function POST(req: Request) {
       subject: content.subject,
       body: content.text,
       html: content.html,
+      enabled: sub.notifyBookingUpdates,
     });
   } else {
     const content = requestSentEmail({
@@ -89,6 +90,7 @@ export async function POST(req: Request) {
       subject: content.subject,
       body: content.text,
       html: content.html,
+      enabled: sub.notifyBookingUpdates,
     });
   }
 
