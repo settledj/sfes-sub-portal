@@ -144,6 +144,47 @@ export function requestDeclinedEmail({
   return { subject, text, html };
 }
 
+export function subConfirmationEmail({
+  subName,
+  teacherName,
+  dateLabel,
+  calendarLinks,
+}: {
+  subName: string;
+  teacherName: string;
+  dateLabel: string;
+  calendarLinks: CalendarLinks;
+}): EmailContent {
+  const subject = "You're confirmed to sub";
+  const text = `You're confirmed to sub for ${teacherName} on ${dateLabel}. Add to calendar: ${calendarLinks.google}`;
+  const html = shell(
+    subject,
+    `<p>Hi ${subName},</p>
+<p>You're confirmed to sub for <strong>${teacherName}</strong> on <strong>${dateLabel}</strong>.</p>
+${calendarLinksHtml(calendarLinks)}`
+  );
+  return { subject, text, html };
+}
+
+export function subDeclineAckEmail({
+  subName,
+  teacherName,
+  dateLabel,
+}: {
+  subName: string;
+  teacherName: string;
+  dateLabel: string;
+}): EmailContent {
+  const subject = "You declined this request";
+  const text = `You declined ${teacherName}'s request for ${dateLabel}. No action needed.`;
+  const html = shell(
+    subject,
+    `<p>Hi ${subName},</p>
+<p>You declined <strong>${teacherName}</strong>'s request for <strong>${dateLabel}</strong>. No action needed — the teacher has been notified.</p>`
+  );
+  return { subject, text, html };
+}
+
 export function bookingCancelledEmail({
   toName,
   otherName,

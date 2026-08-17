@@ -5,7 +5,7 @@
 import { prisma } from "./prisma";
 import { logNotification } from "./notify";
 import { dkToDate, prettyDate } from "./dates";
-import { requestAcceptedEmail, requestDeclinedEmail } from "./emailTemplates";
+import { requestAcceptedEmail, requestDeclinedEmail, subConfirmationEmail, subDeclineAckEmail } from "./emailTemplates";
 import { buildCalendarLinks } from "./calendarLinks";
 
 export async function respondToRequest(id: string, accept: boolean) {
@@ -30,22 +30,20 @@ export async function respondToRequest(id: string, accept: boolean) {
   const sub = await prisma.substitute.findUnique({ where: { id: existing.subId } });
   const teacher = await prisma.teacher.findUnique({ where: { id: existing.teacherId } });
 
-  if (teacher) {
-    const dateLabel = prettyDate(dkToDate(existing.dk));
-    const subName = sub ? sub.name : "Your substitute";
+  const dateLabel = prettyDate(dkToDate(existing.dk));
+  const subName = sub ? sub.name : "Your substitute";
+  const calendarLinks = accept
+    ? buildCalendarLinks(
+        existing.id,
+        existing.dk,
+        `Substitute — ${existing.subject || teacher?.name || "Class"}`,
+        `${subName} covering for ${teacher?.name || "the teacher"}${existing.subject ? ` (${existing.subject})` : ""}.`
+      )
+    : null;
 
+  if (teacher) {
     const content = accept
-      ? requestAcceptedEmail({
-          teacherName: teacher.name,
-          subName,
-          dateLabel,
-          calendarLinks: buildCalendarLinks(
-            existing.id,
-            existing.dk,
-            `Substitute — ${existing.subject || teacher.name}`,
-            `${subName} covering for ${teacher.name}${existing.subject ? ` (${existing.subject})` : ""}.`
-          ),
-        })
+      ? requestAcceptedEmail({ teacherName: teacher.name, subName, dateLabel, calendarLinks: calendarLinks! })
       : requestDeclinedEmail({ teacherName: teacher.name, subName, dateLabel });
 
     await logNotification(prisma, {
@@ -53,6 +51,22 @@ export async function respondToRequest(id: string, accept: boolean) {
       toName: teacher.name,
       toEmail: teacher.email,
       toPhone: teacher.phone,
+      subject: content.subject,
+      body: content.text,
+      html: content.html,
+    });
+  }
+
+  if (sub) {
+    const content = accept
+      ? subConfirmationEmail({ subName: sub.name, teacherName: teacher?.name || "the teacher", dateLabel, calendarLinks: calendarLinks! })
+      : subDeclineAckEmail({ subName: sub.name, teacherName: teacher?.name || "the teacher", dateLabel });
+
+    await logNotification(prisma, {
+      event: accept ? "sub_confirmed_ack" : "sub_declined_ack",
+      toName: sub.name,
+      toEmail: sub.email,
+      toPhone: sub.phone,
       subject: content.subject,
       body: content.text,
       html: content.html,
