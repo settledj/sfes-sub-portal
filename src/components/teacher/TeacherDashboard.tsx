@@ -67,6 +67,24 @@ export function TeacherDashboard({
     [requests, teacherId]
   );
 
+  // Lets clicking a day in Week/Month view open that booking directly, same as
+  // clicking a row already does in List view. Non-cancelled wins if a date
+  // somehow has more than one of the teacher's own requests on it.
+  const myRequestByDk = useMemo(() => {
+    const map = new Map<string, Booking>();
+    for (const r of requests) {
+      if (r.teacherId !== teacherId) continue;
+      const existing = map.get(r.dk);
+      if (!existing || (existing.status === "cancelled" && r.status !== "cancelled")) map.set(r.dk, r);
+    }
+    return map;
+  }, [requests, teacherId]);
+
+  const handleDayActivate = (d: Date) => {
+    const booking = myRequestByDk.get(dateKey(d));
+    if (booking) onOpenBooking(booking.id);
+  };
+
   const sorted = [...filtered].sort((a, b) => {
     const rank = (s: Sub) => {
       const st = effectiveStatus(s.availability[dk]);
@@ -168,10 +186,10 @@ export function TeacherDashboard({
                 <button onClick={() => shiftWeek(1)} className="p-1.5 rounded hover:bg-gray-100"><ChevronRight size={16} color={C.navy} /></button>
               </div>
             </div>
-            <WeekStrip subs={filtered} selectedDate={selectedDate} setSelectedDate={setSelectedDate} bookedDates={bookedDates} />
+            <WeekStrip subs={filtered} selectedDate={selectedDate} setSelectedDate={setSelectedDate} bookedDates={bookedDates} onDayActivate={handleDayActivate} />
           </>
         ) : viewMode === "month" ? (
-          <MonthGrid subs={filtered} viewMonth={viewMonth} setViewMonth={setViewMonth} selectedDate={selectedDate} setSelectedDate={setSelectedDate} bookedDates={bookedDates} />
+          <MonthGrid subs={filtered} viewMonth={viewMonth} setViewMonth={setViewMonth} selectedDate={selectedDate} setSelectedDate={setSelectedDate} bookedDates={bookedDates} onDayActivate={handleDayActivate} />
         ) : (
           <div>
             <p className="text-xs font-semibold mb-3" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
