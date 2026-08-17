@@ -7,6 +7,9 @@ interface NotificationInput {
   toPhone?: string | null;
   subject: string;
   body: string;
+  // Optional HTML version (calendar links, accept/decline buttons, etc.) —
+  // sent alongside the plain-text body for clients that render it.
+  html?: string;
 }
 
 type DeliveryResult = { status: "sent" | "failed" | "skipped"; error: string | null };
@@ -21,9 +24,15 @@ type DeliveryResult = { status: "sent" | "failed" | "skipped"; error: string | n
 export async function logNotification(prisma: PrismaClient, entry: NotificationInput) {
   const [email, sms] = await Promise.all([sendEmail(entry), sendSms(entry)]);
 
+  // html isn't a column on Notification — only the fields below are logged.
   return prisma.notification.create({
     data: {
-      ...entry,
+      event: entry.event,
+      toName: entry.toName,
+      toEmail: entry.toEmail,
+      toPhone: entry.toPhone,
+      subject: entry.subject,
+      body: entry.body,
       emailStatus: email.status,
       emailError: email.error,
       smsStatus: sms.status,
@@ -46,6 +55,7 @@ async function sendEmail(entry: NotificationInput): Promise<DeliveryResult> {
       to: entry.toEmail,
       subject: entry.subject,
       text: entry.body,
+      ...(entry.html ? { html: entry.html } : {}),
     });
     if (error) {
       console.error("Email delivery failed:", error);

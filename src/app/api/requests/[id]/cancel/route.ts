@@ -4,6 +4,7 @@ import { requireRole, teacherOwnsBooking } from "@/lib/authz";
 import { logNotification } from "@/lib/notify";
 import { serializeRequest } from "@/lib/serialize";
 import { dkToDate, prettyDate } from "@/lib/dates";
+import { bookingCancelledEmail } from "@/lib/emailTemplates";
 
 // Teacher or admin cancels a pending or confirmed request — frees the date back up
 // and notifies both the teacher and substitute that the booking is off.
@@ -18,7 +19,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "Not your booking." }, { status: 403 });
   }
 
-  const updated = await prisma.request.update({ where: { id }, data: { status: "cancelled" } });
+  const updated = await prisma.request.update({ where: { id }, data: { status: "cancelled", respondToken: null } });
 
   const [sub, teacher] = await Promise.all([
     prisma.substitute.findUnique({ where: { id: existing.subId } }),
@@ -34,23 +35,31 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const when = prettyDate(dkToDate(existing.dk));
   await Promise.all([
     sub &&
-      logNotification(prisma, {
-        event: "booking_cancelled",
-        toName: sub.name,
-        toEmail: sub.email,
-        toPhone: sub.phone,
-        subject: "Booking cancelled",
-        body: `${existing.teacherName || "The teacher"}'s request for you on ${when} has been cancelled.`,
-      }),
+      (() => {
+        const content = bookingCancelledEmail({ toName: sub.name, otherName: existing.teacherName, dateLabel: when, perspective: "sub" });
+        return logNotification(prisma, {
+          event: "booking_cancelled",
+          toName: sub.name,
+          toEmail: sub.email,
+          toPhone: sub.phone,
+          subject: content.subject,
+          body: content.text,
+          html: content.html,
+        });
+      })(),
     teacher &&
-      logNotification(prisma, {
-        event: "booking_cancelled",
-        toName: teacher.name,
-        toEmail: teacher.email,
-        toPhone: teacher.phone,
-        subject: "Booking cancelled",
-        body: `The booking with ${sub ? sub.name : "your substitute"} on ${when} has been cancelled.`,
-      }),
+      (() => {
+        const content = bookingCancelledEmail({ toName: teacher.name, otherName: sub?.name ?? "", dateLabel: when, perspective: "teacher" });
+        return logNotification(prisma, {
+          event: "booking_cancelled",
+          toName: teacher.name,
+          toEmail: teacher.email,
+          toPhone: teacher.phone,
+          subject: content.subject,
+          body: content.text,
+          html: content.html,
+        });
+      })(),
   ]);
 
   return NextResponse.json(serializeRequest(updated));

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/authz";
-import { logNotification } from "@/lib/notify";
+import { respondToRequest } from "@/lib/respondToRequest";
 import { serializeRequest } from "@/lib/serialize";
-import { dkToDate, prettyDate } from "@/lib/dates";
 
 // Substitute (or admin, acting on their behalf) accepts/declines a pending request.
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -23,31 +22,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
   }
 
-  const updated = await prisma.request.update({
-    where: { id },
-    data: { status: accept ? "accepted" : "declined" },
-  });
-
-  if (accept) {
-    const sub = await prisma.substitute.findUnique({ where: { id: existing.subId } });
-    if (sub) {
-      const availability = { ...(sub.availability as Record<string, string>), [existing.dk]: "booked" };
-      await prisma.substitute.update({ where: { id: sub.id }, data: { availability } });
-    }
-  }
-
-  const sub = await prisma.substitute.findUnique({ where: { id: existing.subId } });
-  const teacher = await prisma.teacher.findUnique({ where: { id: existing.teacherId } });
-  if (teacher) {
-    await logNotification(prisma, {
-      event: accept ? "request_accepted" : "request_declined",
-      toName: teacher.name,
-      toEmail: teacher.email,
-      toPhone: teacher.phone,
-      subject: accept ? "Substitute confirmed" : "Substitute declined",
-      body: `${sub ? sub.name : "Your substitute"} has ${accept ? "confirmed" : "declined"} your request for ${prettyDate(dkToDate(existing.dk))}.`,
-    });
-  }
+  const updated = await respondToRequest(id, accept);
+  if (!updated) return NextResponse.json({ error: "Request is no longer pending." }, { status: 409 });
 
   return NextResponse.json(serializeRequest(updated));
 }

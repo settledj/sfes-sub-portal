@@ -93,6 +93,11 @@ model Request {
   subFeedback String        @default("")
   status      RequestStatus @default(pending)
   source      RequestSource @default(teacher)
+  // One-click accept/decline from the notification email, no login required.
+  // Set when a request becomes pending, cleared the moment it's responded to
+  // (by any path — the email link or the portal) so the link goes dead after
+  // one use. See src/app/respond/[token]/page.tsx.
+  respondToken String?      @unique
   messages    Message[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
