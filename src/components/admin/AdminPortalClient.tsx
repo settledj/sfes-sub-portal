@@ -12,7 +12,7 @@ import type { AllowedUserRow } from "@/lib/api";
 
 const emptyState: AppState = { subs: [], teachers: [], admins: [], requests: [], notifications: [] };
 
-export function AdminPortalClient({ adminName }: { adminName: string }) {
+export function AdminPortalClient({ adminId, adminName }: { adminId: number; adminName: string }) {
   const [state, setState] = useState<AppState>(emptyState);
   const [allowedUsers, setAllowedUsers] = useState<AllowedUserRow[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -35,6 +35,10 @@ export function AdminPortalClient({ adminName }: { adminName: string }) {
   if (!loaded) {
     return <p className="text-sm p-6" style={{ color: C.grey }}>Loading…</p>;
   }
+
+  const me =
+    state.admins.find((a) => a.id === adminId) ??
+    { id: adminId, name: adminName, email: "", phone: "", notifyBookingUpdates: true, notifyMessages: true };
 
   return (
     <div>
@@ -65,6 +69,11 @@ export function AdminPortalClient({ adminName }: { adminName: string }) {
         teachers={state.teachers}
         requests={state.requests}
         adminName={adminName}
+        me={me}
+        onUpdatePreferences={async (updates) => {
+          const updated = await api.updateAdminProfile(me.id, updates);
+          setState((s) => ({ ...s, admins: s.admins.map((a) => (a.id === updated.id ? updated : a)) }));
+        }}
         onApprove={async (id) => {
           await api.respondRequest(id, true);
           await refreshAll();

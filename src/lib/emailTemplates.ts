@@ -219,6 +219,29 @@ export function bookingCancelledEmail({
   return { subject, text, html };
 }
 
+export function newBookingRequestAdminEmail({
+  adminName,
+  teacherName,
+  subName,
+  dateLabel,
+  subjectLine,
+}: {
+  adminName: string;
+  teacherName: string;
+  subName: string;
+  dateLabel: string;
+  subjectLine: string;
+}): EmailContent {
+  const subject = "New substitute request";
+  const text = `${teacherName || "A teacher"} requested ${subName} to sub on ${dateLabel}${subjectLine ? ` for ${subjectLine}` : ""}.`;
+  const html = shell(
+    subject,
+    `<p>Hi ${escapeHtml(adminName)},</p>
+<p><strong>${escapeHtml(teacherName || "A teacher")}</strong> requested <strong>${escapeHtml(subName)}</strong> to sub on <strong>${escapeHtml(dateLabel)}</strong>${subjectLine ? ` for ${escapeHtml(subjectLine)}` : ""}.</p>`
+  );
+  return { subject, text, html };
+}
+
 export function newMessageEmail({
   toName,
   senderName,

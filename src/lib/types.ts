@@ -39,6 +39,8 @@ export interface Admin {
   name: string;
   email: string;
   phone: string;
+  notifyBookingUpdates: boolean;
+  notifyMessages: boolean;
 }
 
 export type RequestStatus = "pending" | "accepted" | "declined" | "cancelled";

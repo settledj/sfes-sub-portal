@@ -1,6 +1,6 @@
 // Thin client-side fetch wrappers around the API routes in src/app/api/. Kept
 // separate from the portal client components so they stay focused on rendering.
-import type { AppState, Booking, Message, Sub, Teacher } from "./types";
+import type { Admin, AppState, Booking, Message, Sub, Teacher } from "./types";
 
 async function json<T>(resPromise: Promise<Response>): Promise<T> {
   const res = await resPromise;
@@ -106,6 +106,10 @@ export function setSubAvailability(id: number, dk: string, status: "available" |
 
 export function updateTeacherProfile(id: number, updates: Partial<Pick<Teacher, "photo" | "notifyBookingUpdates" | "notifyMessages">>) {
   return json<Teacher>(patch(`/api/teachers/${id}`, updates));
+}
+
+export function updateAdminProfile(id: number, updates: Partial<Pick<Admin, "notifyBookingUpdates" | "notifyMessages">>) {
+  return json<Admin>(patch(`/api/admins/${id}`, updates));
 }
 
 export interface AllowedUserRow {

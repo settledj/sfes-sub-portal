@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Bell, PlusCircle, ShieldCheck, MessageCircle } from "lucide-react";
+import { Search, Activity, Bell, PlusCircle, ShieldCheck, MessageCircle } from "lucide-react";
 import { C } from "@/lib/constants";
 import { addDays, dateKey } from "@/lib/dates";
 import { isRequestable } from "@/lib/availability";
@@ -13,13 +13,16 @@ import { AdminNewBooking, type NewBookingPrefill } from "@/components/admin/Admi
 import { AdminAccess, type AllowedUserRow } from "@/components/admin/AdminAccess";
 import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
 import { MessagesInboxModal } from "@/components/shared/MessagesInboxModal";
-import type { Sub, Teacher, Booking, Notification } from "@/lib/types";
+import { NotificationPreferences } from "@/components/shared/NotificationPreferences";
+import type { Admin, Sub, Teacher, Booking, Notification } from "@/lib/types";
 
 export function AdminPortal({
   subs,
   teachers,
   requests,
   adminName,
+  me,
+  onUpdatePreferences,
   onApprove,
   onDecline,
   onCancel,
@@ -38,6 +41,8 @@ export function AdminPortal({
   teachers: Teacher[];
   requests: Booking[];
   adminName: string;
+  me: Admin;
+  onUpdatePreferences: (updates: { notifyBookingUpdates?: boolean; notifyMessages?: boolean }) => void;
   onApprove: (id: string) => void;
   onDecline: (id: string) => void;
   onCancel: (id: string) => void;
@@ -57,6 +62,7 @@ export function AdminPortal({
   const [openBookingId, setOpenBookingId] = useState<string | null>(null);
   const openBooking = requests.find((r) => r.id === openBookingId);
   const [showMessages, setShowMessages] = useState(false);
+  const [showPreferences, setShowPreferences] = useState(false);
 
   const [viewMode, setViewMode] = useState<AdminViewMode>("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -114,7 +120,7 @@ export function AdminPortal({
           className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold"
           style={{ fontFamily: "Barlow, sans-serif", backgroundColor: tab === "notifications" ? C.navy : "transparent", color: tab === "notifications" ? "white" : C.grey }}
         >
-          <Bell size={14} /> Notifications
+          <Activity size={14} /> Activity
         </button>
         <button
           onClick={() => setTab("new")}
@@ -132,14 +138,33 @@ export function AdminPortal({
         </button>
       </div>
 
-      <button
-        onClick={() => setShowMessages(true)}
-        className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg bg-white"
-        style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: "1.5px solid #D9DCE3" }}
-      >
-        <MessageCircle size={14} /> Messages
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setShowMessages(true)}
+          className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg bg-white"
+          style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: "1.5px solid #D9DCE3" }}
+        >
+          <MessageCircle size={14} /> Messages
+        </button>
+        <button
+          onClick={() => setShowPreferences((v) => !v)}
+          className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg bg-white"
+          style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: "1.5px solid #D9DCE3" }}
+        >
+          <Bell size={14} /> Notifications
+        </button>
       </div>
+      </div>
+
+      {showPreferences && (
+        <div className="mb-6">
+          <NotificationPreferences
+            notifyBookingUpdates={me.notifyBookingUpdates}
+            notifyMessages={me.notifyMessages}
+            onChange={onUpdatePreferences}
+          />
+        </div>
+      )}
 
       <div className="mb-8 pb-8" style={{ borderBottom: "1px solid #E3E5EA" }}>
         <AdminAvailability

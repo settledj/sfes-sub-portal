@@ -7,7 +7,7 @@ import { serializeRequest } from "@/lib/serialize";
 import { dkToDate, prettyDate } from "@/lib/dates";
 import { getAppUrl } from "@/lib/appUrl";
 import { buildCalendarLinks } from "@/lib/calendarLinks";
-import { adminBookedEmail, requestSentEmail } from "@/lib/emailTemplates";
+import { adminBookedEmail, newBookingRequestAdminEmail, requestSentEmail } from "@/lib/emailTemplates";
 
 // Teacher sends a request (starts pending) — payload: {subId, dk, teacherId, teacherName, subject, grade, notes}.
 // Admin creates a manual booking (confirmed immediately) — same payload plus source: "admin".
@@ -92,6 +92,29 @@ export async function POST(req: Request) {
       html: content.html,
       enabled: sub.notifyBookingUpdates,
     });
+
+    const admins = await prisma.admin.findMany();
+    await Promise.all(
+      admins.map((admin) => {
+        const adminContent = newBookingRequestAdminEmail({
+          adminName: admin.name,
+          teacherName,
+          subName: sub.name,
+          dateLabel,
+          subjectLine: subject,
+        });
+        return logNotification(prisma, {
+          event: "request_sent_admin",
+          toName: admin.name,
+          toEmail: admin.email,
+          toPhone: admin.phone,
+          subject: adminContent.subject,
+          body: adminContent.text,
+          html: adminContent.html,
+          enabled: admin.notifyBookingUpdates,
+        });
+      })
+    );
   }
 
   return NextResponse.json(serializeRequest(created), { status: 201 });

@@ -60,11 +60,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     data: { requestId: id, senderRole: role, senderName: senderName || email, body: text },
   });
 
-  // Notify whoever didn't send it — both, if an admin sent it.
+  // Notify whoever didn't send it — both, if an admin sent it — plus every
+  // other admin (admins want visibility into every conversation, not just
+  // ones they're already part of).
   const dateLabel = prettyDate(dkToDate(existing!.dk));
-  const recipients = [];
+  const recipients: { record: { name: string; email: string; phone: string; notifyMessages: boolean }; portalPath: string }[] = [];
   if (role !== "teacher" && teacher) recipients.push({ record: teacher, portalPath: "/teacher" });
   if (role !== "substitute" && sub) recipients.push({ record: sub, portalPath: "/sub" });
+
+  const admins = await prisma.admin.findMany();
+  for (const admin of admins) {
+    if (role === "admin" && admin.email === email) continue;
+    recipients.push({ record: admin, portalPath: "/admin" });
+  }
 
   await Promise.all(
     recipients.map(({ record, portalPath }) => {

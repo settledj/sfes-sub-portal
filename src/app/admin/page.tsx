@@ -26,7 +26,7 @@ export default async function AdminPage() {
     <div className="min-h-screen" style={{ backgroundColor: C.cream, fontFamily: "PT Serif, serif" }}>
       <PortalHeader subtitle="Admin" />
       <main className="max-w-6xl mx-auto px-5 py-6">
-        <AdminPortalClient adminName={admin.name} />
+        <AdminPortalClient adminId={admin.id} adminName={admin.name} />
       </main>
     </div>
   );
