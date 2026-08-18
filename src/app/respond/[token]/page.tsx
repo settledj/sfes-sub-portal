@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { dkToDate, prettyDate } from "@/lib/dates";
 import { C } from "@/lib/constants";
-import { WolfMark } from "@/components/shared/WolfMark";
+import { SchoolLogo } from "@/components/shared/SchoolLogo";
 import { RespondActions } from "@/components/respond/RespondActions";
 
 // Public, no-login landing page for the Accept/Decline links in the
@@ -31,7 +31,7 @@ export default async function RespondPage({
       <div className="max-w-sm w-full">
         <div className="rounded-2xl border bg-white p-6" style={{ borderColor: "#E3E5EA" }}>
           <div className="flex justify-center mb-4">
-            <WolfMark size={44} />
+            <SchoolLogo height={40} />
           </div>
 
           {!request || request.status !== "pending" ? (

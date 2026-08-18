@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "St. Francis Episcopal School — Substitute Portal",
-  description: "Substitute Availability Portal for St. Francis Episcopal School",
+  title: "SubMe — St. Francis Episcopal School",
+  description: "SubMe, the substitute scheduling portal for St. Francis Episcopal School",
 };
 
 // Ported components reference the literal family names "Barlow" and "PT Serif"

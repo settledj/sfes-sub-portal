@@ -18,8 +18,8 @@ function shell(heading: string, bodyHtml: string): string {
 <tr><td align="center">
 <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;max-width:480px;">
 <tr><td style="background-color:${C.navy};padding:20px 28px;font-family:Arial,Helvetica,sans-serif;">
-<span style="color:#ffffff;font-weight:700;font-size:16px;">St. Francis Episcopal School</span><br/>
-<span style="color:#C7CEDE;font-size:12px;">Substitute Portal</span>
+<span style="color:#ffffff;font-weight:700;font-size:16px;">SubMe</span><br/>
+<span style="color:#C7CEDE;font-size:12px;">St. Francis Episcopal School</span>
 </td></tr>
 <tr><td style="padding:28px;font-family:Arial,Helvetica,sans-serif;color:#3F4552;font-size:15px;line-height:1.6;">
 <h1 style="margin:0 0 16px;font-size:18px;color:${C.navy};">${heading}</h1>

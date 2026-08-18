@@ -3,7 +3,7 @@ import { auth, signIn } from "@/lib/auth";
 import { createFirstPassword } from "@/lib/passwordSetup";
 import { signinUrl } from "@/lib/signinUrl";
 import { C } from "@/lib/constants";
-import { WolfMark } from "@/components/shared/WolfMark";
+import { SchoolLogo } from "@/components/shared/SchoolLogo";
 
 const errorMessages: Record<string, string> = {
   AccessDenied: "That account isn't on the approved list yet. Contact your administrator.",
@@ -30,13 +30,13 @@ export default async function SignInPage({
       <div className="max-w-sm w-full mx-4">
         <div className="rounded-2xl border bg-white p-6" style={{ borderColor: "#E3E5EA" }}>
           <div className="flex justify-center mb-4">
-            <WolfMark size={44} />
+            <SchoolLogo height={40} />
           </div>
           <p className="text-center font-bold text-lg" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
-            {isNew ? "Create your password" : "Sign in"}
+            {isNew ? "Create your password" : "Sign in to SubMe"}
           </p>
           <p className="text-center text-xs mb-5" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
-            St. Francis Episcopal School — Substitute Portal. Access is limited to approved staff and
+            The St. Francis Episcopal School substitute portal. Access is limited to approved staff and
             substitutes.
           </p>
 

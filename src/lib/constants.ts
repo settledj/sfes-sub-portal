@@ -1,11 +1,15 @@
 // Brand tokens (St. Francis Episcopal School brand guide) — ported from the prototype.
+// Navy and red are Pantone 281 / 1788 (St. Francis primary palette) — exact
+// match to the official brand guide. Gold/teal/blue are the guide's official
+// secondary palette (division colors). Grey/greyLight/cream are app-only
+// neutrals, not specified by the brand guide.
 export const C = {
   navy: "#1B2A53",
   navyLight: "#2C3F70",
   red: "#F32735",
-  gold: "#B8923A",
-  teal: "#2E7D6E",
-  blue: "#4A6FA5",
+  gold: "#EDA04E",
+  teal: "#00B8B3",
+  blue: "#5078B7",
   grey: "#6B7280",
   greyLight: "#EEF0F3",
   cream: "#FAF9F7",
