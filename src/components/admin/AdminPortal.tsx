@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Search, Activity, Bell, PlusCircle, ShieldCheck, MessageCircle } from "lucide-react";
 import { C } from "@/lib/constants";
 import { addDays, dateKey } from "@/lib/dates";
@@ -14,12 +14,13 @@ import { AdminAccess, type AllowedUserRow } from "@/components/admin/AdminAccess
 import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
 import { MessagesInboxModal } from "@/components/shared/MessagesInboxModal";
 import { NotificationPreferences } from "@/components/shared/NotificationPreferences";
-import type { Admin, Sub, Teacher, Booking, Notification } from "@/lib/types";
+import type { Admin, Sub, Teacher, Booking, Notification, SchoolClosure } from "@/lib/types";
 
 export function AdminPortal({
   subs,
   teachers,
   requests,
+  closures,
   adminName,
   me,
   onUpdatePreferences,
@@ -40,6 +41,7 @@ export function AdminPortal({
   subs: Sub[];
   teachers: Teacher[];
   requests: Booking[];
+  closures: SchoolClosure[];
   adminName: string;
   me: Admin;
   onUpdatePreferences: (updates: { notifyBookingUpdates?: boolean; notifyMessages?: boolean }) => void;
@@ -78,6 +80,7 @@ export function AdminPortal({
   const dk = dateKey(selectedDate);
 
   const availableCount = subs.filter((s) => isRequestable(s.availability[dk])).length;
+  const closuresMap = useMemo(() => new Map(closures.map((c) => [c.dk, c.reason])), [closures]);
 
   const jumpToDate = (value: string) => {
     if (!value) return;
@@ -171,6 +174,7 @@ export function AdminPortal({
           subs={subs}
           teachers={teachers}
           requests={requests}
+          closures={closuresMap}
           availableCount={availableCount}
           viewMode={viewMode}
           setViewMode={setViewMode}
@@ -204,7 +208,15 @@ export function AdminPortal({
       )}
 
       {openDayDate && (
-        <AdminDayModal date={openDayDate} subs={subs} teachers={teachers} requests={requests} onClose={() => setOpenDayDate(null)} onOpenBooking={setOpenBookingId} />
+        <AdminDayModal
+          date={openDayDate}
+          subs={subs}
+          teachers={teachers}
+          requests={requests}
+          closureReason={closuresMap.get(dateKey(openDayDate))}
+          onClose={() => setOpenDayDate(null)}
+          onOpenBooking={setOpenBookingId}
+        />
       )}
 
       {openBooking && (

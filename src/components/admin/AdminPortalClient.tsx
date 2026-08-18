@@ -10,7 +10,7 @@ import { AdminPortal } from "@/components/admin/AdminPortal";
 import type { AppState } from "@/lib/types";
 import type { AllowedUserRow } from "@/lib/api";
 
-const emptyState: AppState = { subs: [], teachers: [], admins: [], requests: [], notifications: [] };
+const emptyState: AppState = { subs: [], teachers: [], admins: [], requests: [], notifications: [], closures: [] };
 
 export function AdminPortalClient({ adminId, adminName }: { adminId: number; adminName: string }) {
   const [state, setState] = useState<AppState>(emptyState);
@@ -68,6 +68,7 @@ export function AdminPortalClient({ adminId, adminName }: { adminId: number; adm
         subs={state.subs}
         teachers={state.teachers}
         requests={state.requests}
+        closures={state.closures}
         adminName={adminName}
         me={me}
         onUpdatePreferences={async (updates) => {

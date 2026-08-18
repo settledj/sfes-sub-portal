@@ -8,12 +8,13 @@ import { NotificationPreferences } from "@/components/shared/NotificationPrefere
 import { MessagesInboxModal } from "@/components/shared/MessagesInboxModal";
 import { TeacherDashboard } from "@/components/teacher/TeacherDashboard";
 import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
-import type { Sub, Teacher, Booking } from "@/lib/types";
+import type { Sub, Teacher, Booking, SchoolClosure } from "@/lib/types";
 
 export function TeacherPortal({
   teacher,
   subs,
   requests,
+  closures,
   sendRequest,
   sendMultiRequest,
   cancelRequest,
@@ -26,6 +27,7 @@ export function TeacherPortal({
   teacher: Teacher;
   subs: Sub[];
   requests: Booking[];
+  closures: SchoolClosure[];
   sendRequest: (subId: number, dk: string, details: { subject: string; grade: string; notes: string }) => void;
   sendMultiRequest: (
     subId: number,
@@ -92,6 +94,7 @@ export function TeacherPortal({
       <TeacherDashboard
         subs={subs}
         requests={requests}
+        closures={closures}
         sendRequest={sendRequest}
         sendMultiRequest={sendMultiRequest}
         teacherId={teacher.id}

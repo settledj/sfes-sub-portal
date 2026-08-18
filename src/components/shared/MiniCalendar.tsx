@@ -10,12 +10,14 @@ export function MiniCalendar({
   setViewMonth,
   isSelected,
   onSelect,
+  closures,
 }: {
   sub: Sub;
   viewMonth: Date;
   setViewMonth: (d: Date) => void;
   isSelected: (dk: string) => boolean;
   onSelect: (d: Date) => void;
+  closures?: Map<string, string>;
 }) {
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
@@ -51,23 +53,27 @@ export function MiniCalendar({
           const d = new Date(year, month, day);
           const dk = dateKey(d);
           const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+          const closureReason = closures?.get(dk);
+          const isClosed = !!closureReason;
+          const isDisabled = isWeekend || isClosed;
           const status = effectiveStatus(sub.availability[dk]);
           const isPicked = isSelected(dk);
-          const bg = isWeekend ? "#F2F3F5" : status === "booked" ? C.gold : status === "unavailable" ? C.red : C.teal;
+          const bg = isDisabled ? "#F2F3F5" : status === "booked" ? C.gold : status === "unavailable" ? C.red : C.teal;
           return (
             <button
               key={idx}
-              onClick={() => !isWeekend && onSelect(d)}
-              disabled={isWeekend}
+              onClick={() => !isDisabled && onSelect(d)}
+              disabled={isDisabled}
+              title={closureReason}
               className="aspect-square rounded-md text-xs font-medium flex items-center justify-center border transition-all"
               style={{
                 backgroundColor: bg,
-                color: isWeekend ? "#B7BAC2" : "white",
+                color: isDisabled ? "#B7BAC2" : "white",
                 borderColor: isPicked ? "#FFE600" : bg,
                 borderWidth: isPicked ? 3 : 1,
                 boxShadow: isPicked ? "0 0 0 1px #FFE600" : "none",
                 fontFamily: "Barlow, sans-serif",
-                cursor: isWeekend ? "default" : "pointer",
+                cursor: isDisabled ? "default" : "pointer",
               }}
             >
               {day}

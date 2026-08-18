@@ -69,6 +69,17 @@ model Admin {
   @@map("admins")
 }
 
+// One row per calendar day the school is closed (holidays, breaks) — reason
+// is shown across every portal's calendar and blocks new teacher-initiated
+// booking requests on that date. Admins can still override.
+model SchoolClosure {
+  id     String @id @default(cuid())
+  dk     String @unique
+  reason String
+
+  @@map("school_closures")
+}
+
 enum RequestStatus {
   pending
   accepted

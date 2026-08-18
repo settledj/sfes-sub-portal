@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { LogOut, Star, Phone, Mail, Grid3x3, ClipboardList, ChevronLeft, ChevronRight, Check, Ban, Bell, MessageCircle } from "lucide-react";
 import { C, SUBJECTS, DIVISIONS, BOOKING_STATUS_META } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate } from "@/lib/dates";
@@ -12,12 +12,13 @@ import { NotificationPreferences } from "@/components/shared/NotificationPrefere
 import { MessagesInboxModal } from "@/components/shared/MessagesInboxModal";
 import { SubDayModal } from "@/components/sub/SubDayModal";
 import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
-import type { Sub, Teacher, Booking } from "@/lib/types";
+import type { Sub, Teacher, Booking, SchoolClosure } from "@/lib/types";
 
 export function SubPortal({
   sub,
   teachers,
   requests,
+  closures,
   respondRequest,
   onLogout,
   onUpdateProfile,
@@ -28,6 +29,7 @@ export function SubPortal({
   sub: Sub;
   teachers: Teacher[];
   requests: Booking[];
+  closures: SchoolClosure[];
   respondRequest: (requestId: string, accept: boolean) => void;
   onLogout: () => void;
   onUpdateProfile: (
@@ -37,6 +39,7 @@ export function SubPortal({
   onPhotoChange: (dataUri: string) => void;
   onSubmitFeedback: (id: string, feedback: string) => Promise<void>;
 }) {
+  const closuresMap = useMemo(() => new Map(closures.map((c) => [c.dk, c.reason])), [closures]);
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -318,26 +321,29 @@ export function SubPortal({
                   const dk = dateKey(d);
                   const status = effectiveStatus(sub.availability[dk]);
                   const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                  const bg = isWeekend ? "#F2F3F5" : status === "booked" ? C.gold : status === "unavailable" ? C.red : C.teal;
-                  const textColor = isWeekend ? "#B7BAC2" : "white";
+                  const closureReason = closuresMap.get(dk);
+                  const isClosed = !!closureReason;
+                  const isDisabled = isWeekend || isClosed;
+                  const bg = isDisabled ? "#F2F3F5" : status === "booked" ? C.gold : status === "unavailable" ? C.red : C.teal;
+                  const textColor = isDisabled ? "#B7BAC2" : "white";
                   const dayBooking = myRequests.find((r) => r.dk === dk && r.status === "accepted");
                   return (
                     <button
                       key={idx}
                       onClick={() => {
-                        if (isWeekend) return;
+                        if (isDisabled) return;
                         if (dayBooking) setOpenBookingId(dayBooking.id);
                         else setOpenDate(d);
                       }}
-                      disabled={isWeekend}
-                      title={status === "booked" ? "Booked — tap to see details" : "Tap to view or change"}
+                      disabled={isDisabled}
+                      title={closureReason || (status === "booked" ? "Booked — tap to see details" : "Tap to view or change")}
                       className="aspect-square rounded-lg text-sm font-medium flex items-center justify-center border transition-colors"
                       style={{
                         backgroundColor: bg,
                         color: textColor,
-                        borderColor: isWeekend ? "#E3E5EA" : bg,
+                        borderColor: isDisabled ? "#E3E5EA" : bg,
                         fontFamily: "Barlow, sans-serif",
-                        cursor: isWeekend ? "default" : "pointer",
+                        cursor: isDisabled ? "default" : "pointer",
                       }}
                     >
                       {day}

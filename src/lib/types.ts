@@ -92,10 +92,16 @@ export interface Notification {
   smsError: string | null;
 }
 
+export interface SchoolClosure {
+  dk: string;
+  reason: string;
+}
+
 export interface AppState {
   subs: Sub[];
   teachers: Teacher[];
   admins: Admin[];
   requests: Booking[];
   notifications: Notification[];
+  closures: SchoolClosure[];
 }

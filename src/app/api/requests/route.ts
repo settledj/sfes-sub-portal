@@ -32,6 +32,9 @@ export async function POST(req: Request) {
       where: { subId, dk, status: { not: "cancelled" } },
     });
     if (clash) return NextResponse.json({ error: "This date already has a request on it." }, { status: 409 });
+
+    const closure = await prisma.schoolClosure.findUnique({ where: { dk } });
+    if (closure) return NextResponse.json({ error: `School is closed on this date (${closure.reason}).` }, { status: 409 });
   }
 
   const respondToken = isAdmin ? null : randomBytes(24).toString("hex");

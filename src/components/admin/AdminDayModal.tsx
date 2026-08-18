@@ -21,6 +21,7 @@ export function AdminDayModal({
   subs,
   teachers,
   requests,
+  closureReason,
   onClose,
   onOpenBooking,
 }: {
@@ -28,6 +29,7 @@ export function AdminDayModal({
   subs: Sub[];
   teachers: Teacher[];
   requests: Booking[];
+  closureReason?: string;
   onClose: () => void;
   onOpenBooking: (id: string) => void;
 }) {
@@ -49,6 +51,12 @@ export function AdminDayModal({
           <p className="font-bold text-lg pr-6" style={{ fontFamily: "Barlow, sans-serif", color: C.navy }}>
             {prettyDate(date)}
           </p>
+
+          {closureReason && (
+            <div className="mt-3 rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ backgroundColor: "#F2F3F5", color: C.grey, fontFamily: "Barlow, sans-serif" }}>
+              School closed — {closureReason}
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2 mt-3">
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: "#E4F2EF", color: C.teal, fontFamily: "Barlow, sans-serif" }}>

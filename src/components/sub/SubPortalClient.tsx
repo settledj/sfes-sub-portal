@@ -7,7 +7,7 @@ import * as api from "@/lib/api";
 import { SubPortal } from "@/components/sub/SubPortal";
 import type { AppState, Sub } from "@/lib/types";
 
-const emptyState: AppState = { subs: [], teachers: [], admins: [], requests: [], notifications: [] };
+const emptyState: AppState = { subs: [], teachers: [], admins: [], requests: [], notifications: [], closures: [] };
 
 export function SubPortalClient({ sub }: { sub: Sub }) {
   const [state, setState] = useState<AppState>(emptyState);
@@ -38,6 +38,7 @@ export function SubPortalClient({ sub }: { sub: Sub }) {
       sub={liveSub}
       teachers={state.teachers}
       requests={state.requests}
+      closures={state.closures}
       respondRequest={async (id, accept) => {
         await api.respondRequest(id, accept);
         await refreshAll();

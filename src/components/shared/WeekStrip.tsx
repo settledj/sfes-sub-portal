@@ -8,6 +8,7 @@ export function WeekStrip({
   selectedDate,
   setSelectedDate,
   bookedDates,
+  closures,
   showBookedCount = false,
   onDayActivate,
 }: {
@@ -15,6 +16,7 @@ export function WeekStrip({
   selectedDate: Date;
   setSelectedDate: (d: Date) => void;
   bookedDates?: Set<string>;
+  closures?: Map<string, string>;
   showBookedCount?: boolean;
   onDayActivate?: (d: Date) => void;
 }) {
@@ -26,6 +28,9 @@ export function WeekStrip({
       {days.map((d, i) => {
         const dk = dateKey(d);
         const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        const closureReason = closures?.get(dk);
+        const isClosed = !!closureReason;
+        const isDisabled = isWeekend || isClosed;
         const availableCount = subs.filter((s) => isRequestable(s.availability[dk])).length;
         const dayBookedCount = subs.filter((s) => effectiveStatus(s.availability[dk]) === "booked").length;
         const isSelected = isSameDay(d, selectedDate);
@@ -35,19 +40,20 @@ export function WeekStrip({
           <button
             key={i}
             onClick={() => {
-              if (isWeekend) return;
+              if (isDisabled) return;
               setSelectedDate(d);
               onDayActivate?.(d);
             }}
-            disabled={isWeekend}
+            disabled={isDisabled}
+            title={closureReason}
             className="relative rounded-lg p-2.5 flex flex-col items-center gap-1 border-2 transition-all"
             style={{
-              backgroundColor: isSelected ? C.navy : isBooked ? "#E8EEF8" : isWeekend ? "#F2F3F5" : "white",
+              backgroundColor: isSelected ? C.navy : isBooked ? "#E8EEF8" : isDisabled ? "#F2F3F5" : "white",
               borderColor: isSelected ? (isBooked ? C.blue : C.navy) : isBooked ? C.blue : isToday ? C.gold : "#E3E5EA",
-              cursor: isWeekend ? "default" : "pointer",
+              cursor: isDisabled ? "default" : "pointer",
             }}
           >
-            {showBookedCount && dayBookedCount > 0 && !isWeekend && (
+            {showBookedCount && dayBookedCount > 0 && !isDisabled && (
               <span
                 className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full text-[10px] font-bold text-white border-2 border-white"
                 style={{ width: 18, height: 18, backgroundColor: C.gold, fontFamily: "Barlow, sans-serif" }}
@@ -58,17 +64,24 @@ export function WeekStrip({
             )}
             <span
               className="text-[10px] font-semibold uppercase"
-              style={{ color: isSelected ? "#C7CEDE" : isBooked ? C.blue : isWeekend ? "#B7BAC2" : C.grey, fontFamily: "Barlow, sans-serif" }}
+              style={{ color: isSelected ? "#C7CEDE" : isBooked ? C.blue : isDisabled ? "#B7BAC2" : C.grey, fontFamily: "Barlow, sans-serif" }}
             >
               {d.toLocaleDateString(undefined, { weekday: "short" })}
             </span>
             <span
               className="text-base font-bold"
-              style={{ color: isSelected ? "white" : isBooked ? C.blue : isWeekend ? "#B7BAC2" : C.navy, fontFamily: "Barlow, sans-serif" }}
+              style={{ color: isSelected ? "white" : isBooked ? C.blue : isDisabled ? "#B7BAC2" : C.navy, fontFamily: "Barlow, sans-serif" }}
             >
               {d.getDate()}
             </span>
-            {isWeekend ? (
+            {isClosed ? (
+              <span
+                className="text-[9px] font-semibold px-1 leading-tight text-center"
+                style={{ color: isSelected ? "#8C97B5" : "#9AA0AE", fontFamily: "Barlow, sans-serif" }}
+              >
+                {closureReason}
+              </span>
+            ) : isWeekend ? (
               <span className="text-[10px]" style={{ color: isSelected ? "#8C97B5" : "#B7BAC2" }}>—</span>
             ) : isBooked ? (
               <span

@@ -11,6 +11,7 @@ export function MonthGrid({
   selectedDate,
   setSelectedDate,
   bookedDates,
+  closures,
   showBookedCount = false,
   onDayActivate,
 }: {
@@ -20,6 +21,7 @@ export function MonthGrid({
   selectedDate: Date;
   setSelectedDate: (d: Date) => void;
   bookedDates?: Set<string>;
+  closures?: Map<string, string>;
   showBookedCount?: boolean;
   onDayActivate?: (d: Date) => void;
 }) {
@@ -57,6 +59,9 @@ export function MonthGrid({
           const d = new Date(year, month, day);
           const dk = dateKey(d);
           const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+          const closureReason = closures?.get(dk);
+          const isClosed = !!closureReason;
+          const isDisabled = isWeekend || isClosed;
           const availableCount = subs.filter((s) => isRequestable(s.availability[dk])).length;
           const dayBookedCount = subs.filter((s) => effectiveStatus(s.availability[dk]) === "booked").length;
           const isSelected = isSameDay(d, selectedDate);
@@ -66,19 +71,20 @@ export function MonthGrid({
             <button
               key={idx}
               onClick={() => {
-                if (isWeekend) return;
+                if (isDisabled) return;
                 setSelectedDate(d);
                 onDayActivate?.(d);
               }}
-              disabled={isWeekend}
+              disabled={isDisabled}
+              title={closureReason}
               className="relative rounded-lg py-1.5 flex flex-col items-center gap-0.5 border-2 transition-all"
               style={{
-                backgroundColor: isSelected ? C.navy : isBooked ? "#E8EEF8" : isWeekend ? "#F2F3F5" : "white",
+                backgroundColor: isSelected ? C.navy : isBooked ? "#E8EEF8" : isDisabled ? "#F2F3F5" : "white",
                 borderColor: isSelected ? (isBooked ? C.blue : C.navy) : isBooked ? C.blue : isToday ? C.gold : "#E3E5EA",
-                cursor: isWeekend ? "default" : "pointer",
+                cursor: isDisabled ? "default" : "pointer",
               }}
             >
-              {showBookedCount && dayBookedCount > 0 && !isWeekend && (
+              {showBookedCount && dayBookedCount > 0 && !isDisabled && (
                 <span
                   className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full text-[9px] font-bold text-white border-2 border-white"
                   style={{ width: 15, height: 15, backgroundColor: C.gold, fontFamily: "Barlow, sans-serif" }}
@@ -89,20 +95,29 @@ export function MonthGrid({
               )}
               <span
                 className="text-xs font-semibold"
-                style={{ color: isSelected ? "white" : isBooked ? C.blue : isWeekend ? "#B7BAC2" : C.navy, fontFamily: "Barlow, sans-serif" }}
+                style={{ color: isSelected ? "white" : isBooked ? C.blue : isDisabled ? "#B7BAC2" : C.navy, fontFamily: "Barlow, sans-serif" }}
               >
                 {day}
               </span>
-              {!isWeekend && (
+              {isClosed ? (
                 <span
-                  className="text-[9px] font-bold"
-                  style={{
-                    color: isSelected ? "#C7CEDE" : isBooked ? C.blue : availableCount > 0 ? C.teal : C.grey,
-                    fontFamily: "Barlow, sans-serif",
-                  }}
+                  className="text-[8px] font-bold px-0.5 leading-tight text-center truncate w-full"
+                  style={{ color: isSelected ? "#C7CEDE" : "#9AA0AE", fontFamily: "Barlow, sans-serif" }}
                 >
-                  {isBooked ? "Booked" : availableCount}
+                  {closureReason}
                 </span>
+              ) : (
+                !isWeekend && (
+                  <span
+                    className="text-[9px] font-bold"
+                    style={{
+                      color: isSelected ? "#C7CEDE" : isBooked ? C.blue : availableCount > 0 ? C.teal : C.grey,
+                      fontFamily: "Barlow, sans-serif",
+                    }}
+                  >
+                    {isBooked ? "Booked" : availableCount}
+                  </span>
+                )
               )}
             </button>
           );

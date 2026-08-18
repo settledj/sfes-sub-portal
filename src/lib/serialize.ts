@@ -1,5 +1,5 @@
-import type { Substitute, Teacher, Admin, Request as DbRequest, Notification as DbNotification, Message as DbMessage } from "@prisma/client";
-import type { Sub, Teacher as TeacherDto, Admin as AdminDto, Booking, Notification, Message, PortalRole, DeliveryStatus, AvailabilityMap } from "./types";
+import type { Substitute, Teacher, Admin, Request as DbRequest, Notification as DbNotification, Message as DbMessage, SchoolClosure as DbSchoolClosure } from "@prisma/client";
+import type { Sub, Teacher as TeacherDto, Admin as AdminDto, Booking, Notification, Message, PortalRole, DeliveryStatus, AvailabilityMap, SchoolClosure } from "./types";
 
 export function serializeSub(s: Substitute): Sub {
   return { ...s, availability: (s.availability as AvailabilityMap) ?? {} };
@@ -41,6 +41,10 @@ export function serializeMessage(m: DbMessage): Message {
     body: m.body,
     createdAt: m.createdAt.getTime(),
   };
+}
+
+export function serializeSchoolClosure(c: DbSchoolClosure): SchoolClosure {
+  return { dk: c.dk, reason: c.reason };
 }
 
 export function serializeNotification(n: DbNotification): Notification {

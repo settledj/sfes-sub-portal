@@ -7,7 +7,7 @@ import * as api from "@/lib/api";
 import { TeacherPortal } from "@/components/teacher/TeacherPortal";
 import type { AppState, Teacher } from "@/lib/types";
 
-const emptyState: AppState = { subs: [], teachers: [], admins: [], requests: [], notifications: [] };
+const emptyState: AppState = { subs: [], teachers: [], admins: [], requests: [], notifications: [], closures: [] };
 
 export function TeacherPortalClient({ teacher }: { teacher: Teacher }) {
   const [state, setState] = useState<AppState>(emptyState);
@@ -38,6 +38,7 @@ export function TeacherPortalClient({ teacher }: { teacher: Teacher }) {
       teacher={liveTeacher}
       subs={state.subs}
       requests={state.requests}
+      closures={state.closures}
       sendRequest={async (subId, dk, details) => {
         const created = await api.sendRequest({ subId, dk, teacherId: liveTeacher.id, teacherName: liveTeacher.name, ...details });
         if (created) setState((s) => ({ ...s, requests: [...s.requests, created] }));

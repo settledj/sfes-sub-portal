@@ -16,6 +16,7 @@ export function AdminAvailability({
   subs,
   teachers,
   requests,
+  closures,
   availableCount,
   viewMode,
   setViewMode,
@@ -38,6 +39,7 @@ export function AdminAvailability({
   subs: Sub[];
   teachers: Teacher[];
   requests: Booking[];
+  closures: Map<string, string>;
   availableCount: number;
   viewMode: AdminViewMode;
   setViewMode: (m: AdminViewMode) => void;
@@ -150,6 +152,7 @@ export function AdminAvailability({
                 subs={subs}
                 selectedDate={selectedDate}
                 setSelectedDate={setSelectedDate}
+                closures={closures}
                 showBookedCount
                 onDayActivate={onDayActivate}
               />
@@ -161,6 +164,7 @@ export function AdminAvailability({
               setViewMonth={setViewMonth}
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
+              closures={closures}
               showBookedCount
               onDayActivate={onDayActivate}
             />

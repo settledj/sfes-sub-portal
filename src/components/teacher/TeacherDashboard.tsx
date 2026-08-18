@@ -12,11 +12,12 @@ import { WeekStrip } from "@/components/shared/WeekStrip";
 import { MonthGrid } from "@/components/shared/MonthGrid";
 import { SubDetailModal } from "@/components/teacher/SubDetailModal";
 import { TeacherSchedule } from "@/components/teacher/TeacherSchedule";
-import type { Sub, Booking } from "@/lib/types";
+import type { Sub, Booking, SchoolClosure } from "@/lib/types";
 
 export function TeacherDashboard({
   subs,
   requests,
+  closures,
   sendRequest,
   sendMultiRequest,
   teacherId,
@@ -25,6 +26,7 @@ export function TeacherDashboard({
 }: {
   subs: Sub[];
   requests: Booking[];
+  closures: SchoolClosure[];
   sendRequest: (subId: number, dk: string, details: { subject: string; grade: string; notes: string }) => void;
   sendMultiRequest: (
     subId: number,
@@ -35,6 +37,7 @@ export function TeacherDashboard({
   onCancelBooking: (id: string) => void;
   onOpenBooking: (id: string) => void;
 }) {
+  const closuresMap = useMemo(() => new Map(closures.map((c) => [c.dk, c.reason])), [closures]);
   const [query, setQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("All");
   const [divisionFilter, setDivisionFilter] = useState("All");
@@ -186,10 +189,10 @@ export function TeacherDashboard({
                 <button onClick={() => shiftWeek(1)} className="p-1.5 rounded hover:bg-gray-100"><ChevronRight size={16} color={C.navy} /></button>
               </div>
             </div>
-            <WeekStrip subs={filtered} selectedDate={selectedDate} setSelectedDate={setSelectedDate} bookedDates={bookedDates} onDayActivate={handleDayActivate} />
+            <WeekStrip subs={filtered} selectedDate={selectedDate} setSelectedDate={setSelectedDate} bookedDates={bookedDates} closures={closuresMap} onDayActivate={handleDayActivate} />
           </>
         ) : viewMode === "month" ? (
-          <MonthGrid subs={filtered} viewMonth={viewMonth} setViewMonth={setViewMonth} selectedDate={selectedDate} setSelectedDate={setSelectedDate} bookedDates={bookedDates} onDayActivate={handleDayActivate} />
+          <MonthGrid subs={filtered} viewMonth={viewMonth} setViewMonth={setViewMonth} selectedDate={selectedDate} setSelectedDate={setSelectedDate} bookedDates={bookedDates} closures={closuresMap} onDayActivate={handleDayActivate} />
         ) : (
           <div>
             <p className="text-xs font-semibold mb-3" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
@@ -313,6 +316,7 @@ export function TeacherDashboard({
         key={openSubId ?? "none"}
         sub={subs.find((s) => s.id === openSubId)}
         requests={requests}
+        closures={closuresMap}
         initialDate={selectedDate}
         onClose={() => setOpenSubId(null)}
         onRequestSend={sendRequest}

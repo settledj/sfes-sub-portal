@@ -87,6 +87,7 @@ function RequestDetailsForm({
 export function SubDetailModal({
   sub,
   requests,
+  closures,
   initialDate,
   onClose,
   onRequestSend,
@@ -94,6 +95,7 @@ export function SubDetailModal({
 }: {
   sub: Sub | undefined;
   requests: Booking[];
+  closures?: Map<string, string>;
   initialDate: Date;
   onClose: () => void;
   onRequestSend: (subId: number, dk: string, details: { subject: string; grade: string; notes: string }) => void;
@@ -117,14 +119,19 @@ export function SubDetailModal({
 
   const dk = dateKey(pickedDate);
   const status = effectiveStatus(sub.availability[dk]);
+  const closureReason = closures?.get(dk);
   // A cancelled request shouldn't keep blocking its date — cancelling is what
   // frees it back up (see the cancel API route, which clears availability).
   const existingRequest = requests.find((r) => r.subId === sub.id && r.dk === dk && r.status !== "cancelled");
-  const canRequest = isRequestable(sub.availability[dk]) && !existingRequest;
+  const canRequest = isRequestable(sub.availability[dk]) && !existingRequest && !closureReason;
 
   const isDateRequestable = (d: Date) => {
     const k = dateKey(d);
-    return isRequestable(sub.availability[k]) && !requests.find((r) => r.subId === sub.id && r.dk === k && r.status !== "cancelled");
+    return (
+      isRequestable(sub.availability[k]) &&
+      !requests.find((r) => r.subId === sub.id && r.dk === k && r.status !== "cancelled") &&
+      !closures?.has(k)
+    );
   };
 
   const toggleMultiMode = () => {
@@ -264,6 +271,7 @@ export function SubDetailModal({
             setViewMonth={setViewMonth}
             isSelected={(k) => (multiMode ? selectedDates.has(k) : dk === k)}
             onSelect={multiMode ? toggleDate : setPickedDate}
+            closures={closures}
           />
 
           {multiMode ? (
@@ -362,7 +370,9 @@ export function SubDetailModal({
                   className="mt-4 w-full py-2.5 rounded-lg text-sm text-center"
                   style={{ backgroundColor: C.greyLight, color: C.grey, fontFamily: "PT Serif, serif" }}
                 >
-                  {sub.name.split(" ")[0]} isn&apos;t available on this date. Pick a date shown in teal on the calendar above.
+                  {closureReason
+                    ? `School is closed on this date (${closureReason}).`
+                    : `${sub.name.split(" ")[0]} isn't available on this date. Pick a date shown in teal on the calendar above.`}
                 </div>
               )}
 
