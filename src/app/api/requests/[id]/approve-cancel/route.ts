@@ -4,9 +4,9 @@ import { requireRole } from "@/lib/authz";
 import { finalizeCancellation } from "@/lib/cancelBooking";
 import { serializeRequest } from "@/lib/serialize";
 
-// Admin cancels a pending or confirmed request directly — no approval loop,
-// since the admin is the one who'd otherwise be approving it. Teachers and
-// substitutes go through /request-cancel instead; see that route.
+// Admin approves a teacher/sub's pending cancellation request — actually
+// cancels the booking (frees availability, notifies both sides) via the same
+// logic the admin-instant /cancel route uses.
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const check = await requireRole(["admin"]);
   if (check instanceof NextResponse) return check;
@@ -14,6 +14,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params;
   const existing = await prisma.request.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Request not found." }, { status: 404 });
+  if (!existing.cancelRequestedAt) return NextResponse.json({ error: "No cancellation request is pending on this booking." }, { status: 400 });
 
   const updated = await finalizeCancellation(existing);
   return NextResponse.json(serializeRequest(updated));

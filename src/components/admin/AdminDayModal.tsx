@@ -1,18 +1,11 @@
 "use client";
 
 import { X } from "lucide-react";
-import { C } from "@/lib/constants";
+import { C, bookingBadgeMeta } from "@/lib/constants";
 import { dateKey, prettyDate } from "@/lib/dates";
 import { effectiveStatus } from "@/lib/availability";
 import { AvatarPair } from "@/components/shared/Avatar";
 import type { Sub, Teacher, Booking } from "@/lib/types";
-
-const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: "Pending", color: C.gold, bg: "#FBF2DF" },
-  accepted: { label: "Confirmed", color: C.teal, bg: "#E4F2EF" },
-  declined: { label: "Declined", color: C.grey, bg: C.greyLight },
-  cancelled: { label: "Cancelled", color: C.grey, bg: C.greyLight },
-};
 
 // Read-only rundown of a single day: every booking on it, plus who's marked
 // unavailable — opened by clicking a day in the admin's week/month calendar.
@@ -80,7 +73,7 @@ export function AdminDayModal({
               {dayRequests.map((r) => {
                 const sub = subs.find((s) => s.id === r.subId);
                 const teacher = teachers.find((t) => t.id === r.teacherId);
-                const meta = statusMeta[r.status] || statusMeta.pending;
+                const meta = bookingBadgeMeta(r);
                 return (
                   <div
                     key={r.id}

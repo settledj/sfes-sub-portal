@@ -113,7 +113,7 @@ export function TeacherPortal({
           onClose={() => setOpenBookingId(null)}
           onSaveDetails={updateRequestDetails}
           onReassign={reassignBooking}
-          onCancel={cancelRequest}
+          onRequestCancel={cancelRequest}
         />
       )}
 

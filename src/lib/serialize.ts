@@ -29,6 +29,8 @@ export function serializeRequest(r: DbRequest): Booking {
     subFeedback: r.subFeedback,
     status: r.status,
     source: r.source,
+    cancelRequestedAt: r.cancelRequestedAt?.getTime() ?? null,
+    cancelRequestedBy: r.cancelRequestedBy as PortalRole | null,
   };
 }
 

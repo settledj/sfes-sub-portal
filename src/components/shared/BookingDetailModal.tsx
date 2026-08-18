@@ -1,21 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Check, Send, Mail } from "lucide-react";
+import { X, Check, Send, Mail, Ban, RefreshCw } from "lucide-react";
 import { PhoneActions } from "@/components/shared/PhoneActions";
-import { C } from "@/lib/constants";
+import { C, bookingBadgeMeta } from "@/lib/constants";
 import { dkToDate, prettyDate } from "@/lib/dates";
 import { fetchMessages, sendMessage } from "@/lib/api";
 import { AvatarPair } from "@/components/shared/Avatar";
 import { ConfirmCancelBookingModal } from "@/components/shared/ConfirmCancelBookingModal";
 import type { Sub, Teacher, Booking, Message, PortalRole } from "@/lib/types";
-
-const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: "Pending", color: C.gold, bg: "#FBF2DF" },
-  accepted: { label: "Confirmed", color: C.teal, bg: "#E4F2EF" },
-  declined: { label: "Declined", color: C.grey, bg: C.greyLight },
-  cancelled: { label: "Cancelled", color: C.grey, bg: C.greyLight },
-};
 
 const roleLabel: Record<PortalRole, string> = { teacher: "Teacher", substitute: "Substitute", admin: "Admin" };
 
@@ -35,6 +28,9 @@ export function BookingDetailModal({
   onSaveDetails,
   onReassign,
   onCancel,
+  onRequestCancel,
+  onApproveCancel,
+  onDenyCancel,
   onRespond,
   onSubmitFeedback,
 }: {
@@ -48,10 +44,13 @@ export function BookingDetailModal({
   onSaveDetails?: (id: string, details: { lessonPlan: string; schedule: string; attendance: string; notes: string }) => void;
   onReassign?: (id: string, newSubId: number) => void;
   onCancel?: (id: string) => void;
+  onRequestCancel?: (id: string) => void;
+  onApproveCancel?: (id: string) => void;
+  onDenyCancel?: (id: string) => void;
   onRespond?: (id: string, accept: boolean) => void;
   onSubmitFeedback?: (id: string, feedback: string) => void | Promise<void>;
 }) {
-  const [subId, setSubId] = useState(booking.subId);
+  const [newSubId, setNewSubId] = useState(booking.subId);
   const [lessonPlan, setLessonPlan] = useState(booking.lessonPlan || "");
   const [schedule, setSchedule] = useState(booking.schedule || "");
   const [attendance, setAttendance] = useState(booking.attendance || "");
@@ -80,21 +79,27 @@ export function BookingDetailModal({
   }, [booking.id]);
 
   const date = dkToDate(booking.dk);
-  const meta = statusMeta[booking.status] || statusMeta.pending;
+  const meta = bookingBadgeMeta(booking);
   const isTerminal = booking.status === "cancelled" || booking.status === "declined";
+  const hasPendingCancelRequest = !!booking.cancelRequestedAt && !isTerminal;
 
   const canEditDetails = (role === "teacher" || role === "admin") && !isTerminal && !!onSaveDetails;
-  const canReassign = canEditDetails && !!onReassign && !!subs?.length;
+  const canReassign = (role === "teacher" || role === "admin") && !isTerminal && !!onReassign && !!subs?.length;
   const canRespond = (role === "substitute" || role === "admin") && booking.status === "pending" && !!onRespond;
-  const canCancel = (role === "teacher" || role === "admin") && !isTerminal && !!onCancel;
+  const canCancelDirect = role === "admin" && !isTerminal && !!onCancel;
+  const canRequestCancel = (role === "teacher" || role === "substitute") && !isTerminal && !hasPendingCancelRequest && !!onRequestCancel;
+  const canDecideCancelRequest = role === "admin" && hasPendingCancelRequest && !!onApproveCancel && !!onDenyCancel;
   const canEditFeedback = booking.status === "accepted" && (role === "substitute" || role === "admin") && !!onSubmitFeedback;
   const showFeedback = booking.status === "accepted" && (role === "teacher" || canEditFeedback);
 
   const handleSaveDetails = () => {
     onSaveDetails?.(booking.id, { lessonPlan, schedule, attendance, notes });
-    if (canReassign && subId !== booking.subId) onReassign?.(booking.id, subId);
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1200);
+  };
+
+  const handleChangeSub = () => {
+    if (newSubId !== booking.subId) onReassign?.(booking.id, newSubId);
   };
 
   const handleSaveFeedback = async () => {
@@ -169,31 +174,6 @@ export function BookingDetailModal({
             </div>
           )}
 
-          {canReassign && (
-            <>
-              <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
-                Reassign substitute
-              </label>
-              <select
-                value={subId}
-                onChange={(e) => setSubId(Number(e.target.value))}
-                className="w-full text-sm px-3 py-2 rounded-lg border outline-none mb-1"
-                style={{ borderColor: "#D9DCE3", fontFamily: "Barlow, sans-serif" }}
-              >
-                {subs!.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-              {subId !== booking.subId ? (
-                <p className="text-xs mb-3" style={{ color: C.gold, fontFamily: "PT Serif, serif" }}>
-                  Saving will unassign {sub?.name || "the current sub"} and book {subs!.find((s) => s.id === subId)?.name} instead.
-                </p>
-              ) : (
-                <div className="mb-3" />
-              )}
-            </>
-          )}
-
           {role !== "teacher" && (
             <div className="flex items-center gap-3 mt-1 mb-4">
               {teacher && <AvatarPair primary={teacher} size={44} />}
@@ -238,6 +218,33 @@ export function BookingDetailModal({
               <p className="text-xs" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>
                 {booking.status === "cancelled" ? "This booking was cancelled." : "This substitute declined this date."}
               </p>
+            </div>
+          )}
+
+          {hasPendingCancelRequest && (
+            <div className="rounded-lg px-3 py-2.5 mb-4" style={{ backgroundColor: "#FBF2DF" }}>
+              <p className="text-xs mb-1" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                {booking.cancelRequestedBy ? roleLabel[booking.cancelRequestedBy] : "Someone"} asked to cancel this booking — it stays on the calendar
+                until the office decides.
+              </p>
+              {canDecideCancelRequest && (
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => onApproveCancel?.(booking.id)}
+                    className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-md text-white"
+                    style={{ backgroundColor: C.red, fontFamily: "Barlow, sans-serif" }}
+                  >
+                    <Ban size={13} /> Approve cancellation
+                  </button>
+                  <button
+                    onClick={() => onDenyCancel?.(booking.id)}
+                    className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-md"
+                    style={{ backgroundColor: "white", color: C.navy, border: "1px solid #D9DCE3", fontFamily: "Barlow, sans-serif" }}
+                  >
+                    <Check size={13} /> Keep booking
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -324,13 +331,48 @@ export function BookingDetailModal({
             )
           )}
 
-          {canCancel && (
+          {canReassign && (
+            <>
+              <label className="text-xs font-semibold block mb-1.5 mt-2" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                Change substitute
+              </label>
+              <div className="flex gap-2 mb-1">
+                <select
+                  value={newSubId}
+                  onChange={(e) => setNewSubId(Number(e.target.value))}
+                  className="flex-1 text-sm px-3 py-2 rounded-lg border outline-none"
+                  style={{ borderColor: "#D9DCE3", fontFamily: "Barlow, sans-serif" }}
+                >
+                  {subs!.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleChangeSub}
+                  disabled={newSubId === booking.subId}
+                  className="px-3 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-40 flex items-center gap-1.5 whitespace-nowrap"
+                  style={{ backgroundColor: C.blue, fontFamily: "Barlow, sans-serif" }}
+                >
+                  <RefreshCw size={13} /> Change
+                </button>
+              </div>
+              {newSubId !== booking.subId ? (
+                <p className="text-xs mb-3" style={{ color: C.gold, fontFamily: "PT Serif, serif" }}>
+                  This will unassign {sub?.name || "the current sub"} and book {subs!.find((s) => s.id === newSubId)?.name} instead.
+                </p>
+              ) : (
+                <div className="mb-3" />
+              )}
+            </>
+          )}
+
+          {(canCancelDirect || canRequestCancel) && (
             <button
               onClick={() => setConfirmingCancel(true)}
               className="w-full py-2.5 rounded-lg text-sm font-semibold mt-1 mb-2"
               style={{ color: C.red, border: `1.5px solid ${C.red}`, fontFamily: "Barlow, sans-serif" }}
             >
-              Cancel booking
+              {canCancelDirect ? "Cancel booking" : "Request cancellation"}
             </button>
           )}
 
@@ -437,9 +479,11 @@ export function BookingDetailModal({
         <ConfirmCancelBookingModal
           booking={booking}
           subName={sub?.name || "Unknown substitute"}
+          mode={canCancelDirect ? "cancel" : "request"}
           onClose={() => setConfirmingCancel(false)}
           onConfirm={() => {
-            onCancel?.(booking.id);
+            if (canCancelDirect) onCancel?.(booking.id);
+            else onRequestCancel?.(booking.id);
             setConfirmingCancel(false);
             onClose();
           }}

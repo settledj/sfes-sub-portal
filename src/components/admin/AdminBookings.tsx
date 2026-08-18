@@ -2,18 +2,11 @@
 
 import { useState } from "react";
 import { Search, Check, Ban, RefreshCw, XCircle, PlusCircle } from "lucide-react";
-import { C } from "@/lib/constants";
+import { C, bookingBadgeMeta } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate, toInputValue } from "@/lib/dates";
 import { AvatarPair } from "@/components/shared/Avatar";
 import { ConfirmCancelBookingModal } from "@/components/shared/ConfirmCancelBookingModal";
 import type { Sub, Teacher, Booking } from "@/lib/types";
-
-const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: "Pending", color: C.gold, bg: "#FBF2DF" },
-  accepted: { label: "Confirmed", color: C.teal, bg: "#E4F2EF" },
-  declined: { label: "Declined", color: C.grey, bg: C.greyLight },
-  cancelled: { label: "Cancelled", color: C.grey, bg: C.greyLight },
-};
 
 export function AdminBookings({
   requests,
@@ -22,6 +15,8 @@ export function AdminBookings({
   onApprove,
   onDecline,
   onCancel,
+  onApproveCancel,
+  onDenyCancel,
   onReschedule,
   onRebook,
   onOpenBooking,
@@ -32,6 +27,8 @@ export function AdminBookings({
   onApprove: (id: string) => void;
   onDecline: (id: string) => void;
   onCancel: (id: string) => void;
+  onApproveCancel: (id: string) => void;
+  onDenyCancel: (id: string) => void;
   onReschedule: (id: string, update: { subId: number; dk: string }) => void;
   onRebook: (r: Booking) => void;
   onOpenBooking: (id: string) => void;
@@ -45,8 +42,13 @@ export function AdminBookings({
 
   const filtered = requests
     .filter((r) => {
-      if (statusFilter === "active" && r.status === "cancelled") return false;
-      if (statusFilter !== "active" && statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (statusFilter === "cancel_requested") {
+        if (!r.cancelRequestedAt || r.status === "cancelled" || r.status === "declined") return false;
+      } else if (statusFilter === "active" && r.status === "cancelled") {
+        return false;
+      } else if (statusFilter !== "active" && statusFilter !== "all" && r.status !== statusFilter) {
+        return false;
+      }
       const sub = subs.find((s) => s.id === r.subId);
       const text = `${r.teacherName || ""} ${sub?.name || ""}`.toLowerCase();
       return text.includes(query.toLowerCase());
@@ -88,6 +90,7 @@ export function AdminBookings({
         >
           <option value="active">Active (hide cancelled)</option>
           <option value="all">All statuses</option>
+          <option value="cancel_requested">Cancellation requested</option>
           <option value="pending">Pending</option>
           <option value="accepted">Confirmed</option>
           <option value="declined">Declined</option>
@@ -105,8 +108,9 @@ export function AdminBookings({
             const sub = subs.find((s) => s.id === r.subId);
             const teacher = teachers.find((t) => t.id === r.teacherId);
             const date = dkToDate(r.dk);
-            const meta = statusMeta[r.status] || statusMeta.pending;
+            const meta = bookingBadgeMeta(r);
             const isRescheduling = reschedulingId === r.id;
+            const hasPendingCancelRequest = !!r.cancelRequestedAt && r.status !== "cancelled" && r.status !== "declined";
             return (
               <div key={r.id} className="rounded-xl border bg-white p-4" style={{ borderColor: "#E3E5EA" }}>
                 <div
@@ -133,7 +137,25 @@ export function AdminBookings({
                 )}
 
                 <div className="flex flex-wrap items-center gap-2 mt-3 sm:ml-16">
-                  {r.status === "pending" && (
+                  {hasPendingCancelRequest && (
+                    <>
+                      <button
+                        onClick={() => onApproveCancel(r.id)}
+                        className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-md text-white"
+                        style={{ backgroundColor: C.red, fontFamily: "Barlow, sans-serif" }}
+                      >
+                        <Ban size={13} /> Approve cancellation
+                      </button>
+                      <button
+                        onClick={() => onDenyCancel(r.id)}
+                        className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-md"
+                        style={{ backgroundColor: "white", color: C.navy, border: "1px solid #D9DCE3", fontFamily: "Barlow, sans-serif" }}
+                      >
+                        <Check size={13} /> Keep booking
+                      </button>
+                    </>
+                  )}
+                  {!hasPendingCancelRequest && r.status === "pending" && (
                     <>
                       <button
                         onClick={() => onApprove(r.id)}
@@ -151,7 +173,7 @@ export function AdminBookings({
                       </button>
                     </>
                   )}
-                  {r.status === "accepted" && (
+                  {!hasPendingCancelRequest && r.status === "accepted" && (
                     <>
                       <button
                         onClick={() => startReschedule(r)}

@@ -56,7 +56,7 @@ export function TeacherPortalClient({ teacher }: { teacher: Teacher }) {
         return { sent: created.map((c) => c.dk), conflicts };
       }}
       cancelRequest={async (id) => {
-        await api.cancelRequest(id);
+        await api.requestCancelBooking(id);
         await refreshAll();
       }}
       updateRequestDetails={async (id, details) => {

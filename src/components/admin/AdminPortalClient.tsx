@@ -87,6 +87,14 @@ export function AdminPortalClient({ adminId, adminName }: { adminId: number; adm
           await api.cancelRequest(id);
           await refreshAll();
         }}
+        onApproveCancel={async (id) => {
+          await api.approveCancelBooking(id);
+          await refreshAll();
+        }}
+        onDenyCancel={async (id) => {
+          await api.denyCancelBooking(id);
+          await refreshAll();
+        }}
         onReschedule={async (id, update) => {
           await api.rescheduleBooking(id, update);
           await refreshAll();

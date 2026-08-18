@@ -242,6 +242,51 @@ export function newBookingRequestAdminEmail({
   return { subject, text, html };
 }
 
+export function cancellationRequestedEmail({
+  adminName,
+  requesterRoleLabel,
+  requesterName,
+  otherName,
+  dateLabel,
+  portalUrl,
+}: {
+  adminName: string;
+  requesterRoleLabel: string;
+  requesterName: string;
+  otherName: string;
+  dateLabel: string;
+  portalUrl: string;
+}): EmailContent {
+  const subject = "Cancellation request needs approval";
+  const text = `${requesterName} (${requesterRoleLabel}) asked to cancel the booking with ${otherName} on ${dateLabel}. Review it in the portal: ${portalUrl}`;
+  const html = shell(
+    subject,
+    `<p>Hi ${escapeHtml(adminName)},</p>
+<p><strong>${escapeHtml(requesterName)}</strong> (${escapeHtml(requesterRoleLabel)}) asked to cancel the booking with <strong>${escapeHtml(otherName)}</strong> on <strong>${escapeHtml(dateLabel)}</strong>. It stays on the calendar until you approve or deny it.</p>
+<div style="margin:22px 0 8px;">${solidButton("Review in portal", portalUrl, C.navy)}</div>`
+  );
+  return { subject, text, html };
+}
+
+export function cancellationDeniedEmail({
+  toName,
+  otherName,
+  dateLabel,
+}: {
+  toName: string;
+  otherName: string;
+  dateLabel: string;
+}): EmailContent {
+  const subject = "Cancellation request denied";
+  const text = `Your request to cancel the booking with ${otherName} on ${dateLabel} was denied. It's still on the calendar.`;
+  const html = shell(
+    subject,
+    `<p>Hi ${escapeHtml(toName)},</p>
+<p>Your request to cancel the booking with <strong>${escapeHtml(otherName)}</strong> on <strong>${escapeHtml(dateLabel)}</strong> was denied by the office. It's still on the calendar — reach out to them if you have questions.</p>`
+  );
+  return { subject, text, html };
+}
+
 export function passwordResetEmail({
   toName,
   resetUrl,

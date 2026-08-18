@@ -2,19 +2,13 @@
 
 import { useState } from "react";
 import { X, Star, PlusCircle } from "lucide-react";
-import { C } from "@/lib/constants";
+import { C, bookingBadgeMeta } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate } from "@/lib/dates";
 import { usernameFor } from "@/lib/people";
 import { Avatar } from "@/components/shared/Avatar";
 import { MiniCalendar } from "@/components/shared/MiniCalendar";
 import { PhoneActions } from "@/components/shared/PhoneActions";
 import type { Sub, Booking } from "@/lib/types";
-
-const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: "Pending", color: C.gold, bg: "#FBF2DF" },
-  accepted: { label: "Confirmed", color: C.teal, bg: "#E4F2EF" },
-  declined: { label: "Declined", color: C.grey, bg: C.greyLight },
-};
 
 export function AdminSubModal({
   sub,
@@ -109,7 +103,7 @@ export function AdminSubModal({
           ) : (
             <div className="flex flex-col gap-2">
               {mine.map((r) => {
-                const meta = statusMeta[r.status] || statusMeta.pending;
+                const meta = bookingBadgeMeta(r);
                 return (
                   <button
                     key={r.id}

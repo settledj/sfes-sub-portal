@@ -43,7 +43,7 @@ export function AdminTeacherModal({
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>Schedule</p>
-          <TeacherSchedule teacherId={teacher.id} requests={requests} subs={subs} onCancel={onCancel} onOpenBooking={onOpenBooking} />
+          <TeacherSchedule teacherId={teacher.id} requests={requests} subs={subs} role="admin" onCancel={onCancel} onOpenBooking={onOpenBooking} />
         </div>
       </div>
     </div>

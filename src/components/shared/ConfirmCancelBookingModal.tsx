@@ -11,14 +11,19 @@ import type { Booking } from "@/lib/types";
 export function ConfirmCancelBookingModal({
   booking,
   subName,
+  mode = "cancel",
   onConfirm,
   onClose,
 }: {
   booking: Booking;
   subName: string;
+  // "cancel" = admin cancelling outright (instant). "request" = teacher/sub
+  // asking to cancel — it just goes to an admin for approval.
+  mode?: "cancel" | "request";
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const isRequest = mode === "request";
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: "rgba(27,42,83,0.55)" }} onClick={onClose}>
       <div className="min-h-full flex items-start justify-center p-4 py-10">
@@ -30,7 +35,7 @@ export function ConfirmCancelBookingModal({
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle size={18} color={C.red} />
             <p className="font-bold text-lg" style={{ fontFamily: "Barlow, sans-serif", color: C.navy }}>
-              Cancel this booking?
+              {isRequest ? "Request cancellation?" : "Cancel this booking?"}
             </p>
           </div>
 
@@ -45,7 +50,9 @@ export function ConfirmCancelBookingModal({
           </div>
 
           <p className="text-sm mb-5" style={{ color: "#3F4552", fontFamily: "PT Serif, serif" }}>
-            Are you sure you want to cancel this booking? The teacher and substitute will both be notified by email.
+            {isRequest
+              ? "The booking stays as-is until the office approves your request. They'll be notified right away."
+              : "Are you sure you want to cancel this booking? The teacher and substitute will both be notified by email."}
           </p>
 
           <div className="flex gap-2">
@@ -61,7 +68,7 @@ export function ConfirmCancelBookingModal({
               className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white"
               style={{ backgroundColor: C.red, fontFamily: "Barlow, sans-serif" }}
             >
-              Cancel booking
+              {isRequest ? "Request cancellation" : "Cancel booking"}
             </button>
           </div>
         </div>

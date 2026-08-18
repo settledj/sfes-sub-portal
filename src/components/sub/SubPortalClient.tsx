@@ -43,6 +43,10 @@ export function SubPortalClient({ sub }: { sub: Sub }) {
         await api.respondRequest(id, accept);
         await refreshAll();
       }}
+      onRequestCancel={async (id) => {
+        await api.requestCancelBooking(id);
+        await refreshAll();
+      }}
       onSubmitFeedback={async (id, subFeedback) => {
         const updated = await api.submitFeedback(id, subFeedback);
         setState((s) => ({ ...s, requests: s.requests.map((r) => (r.id === id ? updated : r)) }));

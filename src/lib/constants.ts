@@ -28,3 +28,14 @@ export const BOOKING_STATUS_META: Record<string, { label: string; color: string;
   declined: { label: "Declined", color: C.grey, bg: "#EEF0F3" },
   cancelled: { label: "Cancelled", color: C.grey, bg: "#EEF0F3" },
 };
+
+// A pending cancellation request is orthogonal to `status` (the booking is
+// still pending/accepted underneath), but it's the more relevant thing to
+// show in a status badge slot — reuses the same gold as "Pending" since both
+// mean "needs someone's attention."
+export function bookingBadgeMeta(r: { status: string; cancelRequestedAt?: number | null }) {
+  if (r.cancelRequestedAt && r.status !== "cancelled" && r.status !== "declined") {
+    return { label: "Cancellation requested", color: C.gold, bg: "#FBF2DF" };
+  }
+  return BOOKING_STATUS_META[r.status] || BOOKING_STATUS_META.pending;
+}

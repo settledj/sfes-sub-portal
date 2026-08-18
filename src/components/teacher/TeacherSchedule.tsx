@@ -2,30 +2,27 @@
 
 import { useState } from "react";
 import { XCircle } from "lucide-react";
-import { C } from "@/lib/constants";
+import { C, bookingBadgeMeta } from "@/lib/constants";
 import { dkToDate, prettyDate } from "@/lib/dates";
 import { Avatar } from "@/components/shared/Avatar";
 import { ConfirmCancelBookingModal } from "@/components/shared/ConfirmCancelBookingModal";
 import type { Sub, Booking } from "@/lib/types";
 
-const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: "Pending", color: C.gold, bg: "#FBF2DF" },
-  accepted: { label: "Confirmed", color: C.teal, bg: "#E4F2EF" },
-  declined: { label: "Declined", color: C.grey, bg: C.greyLight },
-  cancelled: { label: "Cancelled", color: C.grey, bg: C.greyLight },
-};
-
-// Used both from the teacher's own "List view" and the admin's teacher-detail modal.
+// Used both from the teacher's own "List view" (role="teacher" — cancelling
+// only requests it, pending admin approval) and the admin's teacher-detail
+// modal (role="admin" — cancels immediately, no approval needed).
 export function TeacherSchedule({
   teacherId,
   requests,
   subs,
+  role = "teacher",
   onCancel,
   onOpenBooking,
 }: {
   teacherId: number;
   requests: Booking[];
   subs: Sub[];
+  role?: "teacher" | "admin";
   onCancel: (id: string) => void;
   onOpenBooking: (id: string) => void;
 }) {
@@ -47,8 +44,8 @@ export function TeacherSchedule({
       {mine.map((r) => {
         const sub = subs.find((s) => s.id === r.subId);
         const date = dkToDate(r.dk);
-        const meta = statusMeta[r.status] || statusMeta.pending;
-        const canCancel = r.status === "pending" || r.status === "accepted";
+        const meta = bookingBadgeMeta(r);
+        const canCancel = (r.status === "pending" || r.status === "accepted") && !r.cancelRequestedAt;
         return (
           <div
             key={r.id}
@@ -81,7 +78,7 @@ export function TeacherSchedule({
                 className="text-xs font-semibold px-2.5 py-1.5 rounded-md flex items-center gap-1 whitespace-nowrap"
                 style={{ color: C.red, border: `1.5px solid ${C.red}`, fontFamily: "Barlow, sans-serif" }}
               >
-                <XCircle size={13} /> Cancel
+                <XCircle size={13} /> {role === "admin" ? "Cancel" : "Request cancellation"}
               </button>
             )}
           </div>
@@ -92,6 +89,7 @@ export function TeacherSchedule({
         <ConfirmCancelBookingModal
           booking={mine.find((r) => r.id === cancelingId)!}
           subName={subs.find((s) => s.id === mine.find((r) => r.id === cancelingId)!.subId)?.name || "Unknown substitute"}
+          mode={role === "admin" ? "cancel" : "request"}
           onClose={() => setCancelingId(null)}
           onConfirm={() => {
             onCancel(cancelingId);

@@ -60,6 +60,20 @@ export function cancelRequest(id: string) {
   return json<Booking>(post(`/api/requests/${id}/cancel`));
 }
 
+// Teacher/sub ask to cancel — doesn't cancel outright, just flags it for an
+// admin to approve or deny. See requestCancelBooking's counterparts below.
+export function requestCancelBooking(id: string) {
+  return json<Booking>(post(`/api/requests/${id}/request-cancel`));
+}
+
+export function approveCancelBooking(id: string) {
+  return json<Booking>(post(`/api/requests/${id}/approve-cancel`));
+}
+
+export function denyCancelBooking(id: string) {
+  return json<Booking>(post(`/api/requests/${id}/deny-cancel`));
+}
+
 export function updateRequestDetails(
   id: string,
   details: { lessonPlan: string; schedule: string; attendance: string; notes: string }

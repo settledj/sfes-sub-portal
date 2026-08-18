@@ -32,6 +32,8 @@ export function AdminAvailability({
   onApprove,
   onDecline,
   onCancel,
+  onApproveCancel,
+  onDenyCancel,
   onReschedule,
   onRebook,
   onOpenBooking,
@@ -55,6 +57,8 @@ export function AdminAvailability({
   onApprove: (id: string) => void;
   onDecline: (id: string) => void;
   onCancel: (id: string) => void;
+  onApproveCancel: (id: string) => void;
+  onDenyCancel: (id: string) => void;
   onReschedule: (id: string, update: { subId: number; dk: string }) => void;
   onRebook: (r: Booking) => void;
   onOpenBooking: (id: string) => void;
@@ -131,6 +135,8 @@ export function AdminAvailability({
           onApprove={onApprove}
           onDecline={onDecline}
           onCancel={onCancel}
+          onApproveCancel={onApproveCancel}
+          onDenyCancel={onDenyCancel}
           onReschedule={onReschedule}
           onRebook={onRebook}
           onOpenBooking={onOpenBooking}

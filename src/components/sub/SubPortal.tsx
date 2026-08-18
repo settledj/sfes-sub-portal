@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { LogOut, Star, Phone, Mail, Grid3x3, ClipboardList, ChevronLeft, ChevronRight, Check, Ban, Bell, MessageCircle } from "lucide-react";
-import { C, SUBJECTS, DIVISIONS, BOOKING_STATUS_META } from "@/lib/constants";
+import { C, SUBJECTS, DIVISIONS, bookingBadgeMeta } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate } from "@/lib/dates";
 import { effectiveStatus } from "@/lib/availability";
 import { EditableAvatar } from "@/components/shared/Avatar";
@@ -20,6 +20,7 @@ export function SubPortal({
   requests,
   closures,
   respondRequest,
+  onRequestCancel,
   onLogout,
   onUpdateProfile,
   onSetDayStatus,
@@ -31,6 +32,7 @@ export function SubPortal({
   requests: Booking[];
   closures: SchoolClosure[];
   respondRequest: (requestId: string, accept: boolean) => void;
+  onRequestCancel: (requestId: string) => void;
   onLogout: () => void;
   onUpdateProfile: (
     updates: Partial<Pick<Sub, "bio" | "subjects" | "division" | "additionalInfo" | "phone" | "notifyBookingUpdates" | "notifyMessages">>
@@ -277,7 +279,7 @@ export function SubPortal({
               ) : (
                 <div className="flex flex-col gap-2">
                   {filteredListRequests.map((r) => {
-                    const meta = BOOKING_STATUS_META[r.status] || BOOKING_STATUS_META.pending;
+                    const meta = bookingBadgeMeta(r);
                     return (
                       <button
                         key={r.id}
@@ -446,6 +448,7 @@ export function SubPortal({
           currentUserName={sub.name}
           onClose={() => setOpenBookingId(null)}
           onRespond={respondRequest}
+          onRequestCancel={onRequestCancel}
           onSubmitFeedback={onSubmitFeedback}
         />
       )}

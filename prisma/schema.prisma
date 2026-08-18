@@ -119,6 +119,12 @@ model Request {
   // (by any path — the email link or the portal) so the link goes dead after
   // one use. See src/app/respond/[token]/page.tsx.
   respondToken String?      @unique
+  // Set when a teacher or substitute asks to cancel an already-sent or
+  // confirmed booking — cancellation isn't immediate for them, it needs an
+  // admin to approve or deny it (see /request-cancel, /approve-cancel,
+  // /deny-cancel). Admins cancel directly and never touch these fields.
+  cancelRequestedAt DateTime?
+  cancelRequestedBy AllowedRole?
   messages    Message[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

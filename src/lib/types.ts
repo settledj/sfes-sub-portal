@@ -62,6 +62,10 @@ export interface Booking {
   subFeedback: string;
   status: RequestStatus;
   source: RequestSource;
+  // Set when a teacher or substitute has asked to cancel this booking and
+  // it's awaiting an admin's approve/deny — see BookingDetailModal.
+  cancelRequestedAt: number | null;
+  cancelRequestedBy: PortalRole | null;
 }
 
 // A single message in a booking's two-way thread between teacher and

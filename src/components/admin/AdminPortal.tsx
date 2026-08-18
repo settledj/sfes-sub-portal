@@ -27,6 +27,8 @@ export function AdminPortal({
   onApprove,
   onDecline,
   onCancel,
+  onApproveCancel,
+  onDenyCancel,
   onReschedule,
   onCreate,
   onSaveDetails,
@@ -48,6 +50,8 @@ export function AdminPortal({
   onApprove: (id: string) => void;
   onDecline: (id: string) => void;
   onCancel: (id: string) => void;
+  onApproveCancel: (id: string) => void;
+  onDenyCancel: (id: string) => void;
   onReschedule: (id: string, update: { subId: number; dk: string }) => void;
   onCreate: (payload: { teacherId: number; teacherName: string; subId: number; dk: string; subject: string; grade: string; notes: string }) => void;
   onSaveDetails: (id: string, details: { lessonPlan: string; schedule: string; attendance: string; notes: string }) => void;
@@ -190,6 +194,8 @@ export function AdminPortal({
           onApprove={onApprove}
           onDecline={onDecline}
           onCancel={onCancel}
+          onApproveCancel={onApproveCancel}
+          onDenyCancel={onDenyCancel}
           onReschedule={onReschedule}
           onRebook={handleRebook}
           onOpenBooking={setOpenBookingId}
@@ -231,6 +237,8 @@ export function AdminPortal({
           onSaveDetails={onSaveDetails}
           onReassign={onReassign}
           onCancel={onCancel}
+          onApproveCancel={onApproveCancel}
+          onDenyCancel={onDenyCancel}
           onRespond={(id, accept) => (accept ? onApprove(id) : onDecline(id))}
           onSubmitFeedback={onSubmitFeedback}
         />
