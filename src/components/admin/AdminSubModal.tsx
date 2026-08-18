@@ -7,6 +7,7 @@ import { dateKey, dkToDate, prettyDate } from "@/lib/dates";
 import { usernameFor } from "@/lib/people";
 import { Avatar } from "@/components/shared/Avatar";
 import { MiniCalendar } from "@/components/shared/MiniCalendar";
+import { PhoneActions } from "@/components/shared/PhoneActions";
 import type { Sub, Booking } from "@/lib/types";
 
 const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
@@ -52,7 +53,9 @@ export function AdminSubModal({
                 <p className="font-bold text-lg truncate" style={{ fontFamily: "Barlow, sans-serif", color: C.navy }}>{sub.name}</p>
                 {sub.preferred && <Star size={14} color={C.gold} fill={C.gold} />}
               </div>
-              <p className="text-xs" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>{sub.phone} · {sub.email}</p>
+              <p className="text-xs flex items-center gap-1.5" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
+                <PhoneActions phone={sub.phone} size={11} /><span>· {sub.email}</span>
+              </p>
               <p className="text-xs mt-0.5" style={{ color: C.blue, fontFamily: "Barlow, sans-serif" }}>Login: {usernameFor(sub.name)}</p>
             </div>
           </div>

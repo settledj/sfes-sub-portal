@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, Star, Phone, Mail, Check, Clock, CalendarPlus } from "lucide-react";
+import { X, Star, Mail, Check, Clock, CalendarPlus } from "lucide-react";
+import { PhoneActions } from "@/components/shared/PhoneActions";
 import { C, SUBJECTS } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate } from "@/lib/dates";
 import { effectiveStatus, isRequestable } from "@/lib/availability";
@@ -208,7 +209,7 @@ export function SubDetailModal({
           )}
 
           <div className="mt-4 space-y-1.5 text-sm" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
-            <p className="flex items-center gap-2"><Phone size={13} /> {sub.phone}</p>
+            <p className="flex items-center gap-2"><PhoneActions phone={sub.phone} size={13} /></p>
             <p className="flex items-center gap-2"><Mail size={13} /> {sub.email}</p>
           </div>
 

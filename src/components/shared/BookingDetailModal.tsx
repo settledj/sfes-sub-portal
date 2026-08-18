@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Check, Send, Phone, Mail } from "lucide-react";
+import { X, Check, Send, Mail } from "lucide-react";
+import { PhoneActions } from "@/components/shared/PhoneActions";
 import { C } from "@/lib/constants";
 import { dkToDate, prettyDate } from "@/lib/dates";
 import { fetchMessages, sendMessage } from "@/lib/api";
@@ -160,7 +161,7 @@ export function BookingDetailModal({
                 </p>
                 {sub && (
                   <div className="flex flex-wrap items-center gap-3 text-xs mt-0.5" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
-                    <span className="flex items-center gap-1"><Phone size={11} /> {sub.phone}</span>
+                    <PhoneActions phone={sub.phone} size={11} />
                     <span className="flex items-center gap-1"><Mail size={11} /> {sub.email}</span>
                   </div>
                 )}

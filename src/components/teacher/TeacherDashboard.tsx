@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Star, Phone, ChevronLeft, ChevronRight, CalendarDays, CalendarRange, Grid3x3, ClipboardList } from "lucide-react";
+import { Search, Star, ChevronLeft, ChevronRight, CalendarDays, CalendarRange, Grid3x3, ClipboardList } from "lucide-react";
+import { PhoneActions } from "@/components/shared/PhoneActions";
 import { C, SUBJECTS, DIVISIONS } from "@/lib/constants";
 import { addDays, dateKey, prettyDate, startOfWeek, toInputValue } from "@/lib/dates";
 import { effectiveStatus, isRequestable } from "@/lib/availability";
@@ -305,7 +306,7 @@ export function TeacherDashboard({
               </div>
 
               <div className="flex items-center gap-3 text-xs" style={{ color: C.grey }}>
-                <span className="flex items-center gap-1"><Phone size={12} /> {sub.phone}</span>
+                <PhoneActions phone={sub.phone} size={12} />
               </div>
             </div>
           );
