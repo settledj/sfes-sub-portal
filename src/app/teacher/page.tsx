@@ -11,7 +11,7 @@ export default async function TeacherPage() {
   if (!session?.user?.email) redirect("/signin");
   if (session.user.role !== "teacher") redirect("/");
 
-  const teacher = await prisma.teacher.findUnique({ where: { email: session.user.email } });
+  const teacher = await prisma.teacher.findFirst({ where: { email: { equals: session.user.email, mode: "insensitive" } } });
   if (!teacher) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.cream }}>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/authz";
+import { requireRole, sameEmail } from "@/lib/authz";
 import { respondToRequest } from "@/lib/respondToRequest";
 import { serializeRequest } from "@/lib/serialize";
 
@@ -17,7 +17,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   if (check.session.user.role === "substitute") {
     const sub = await prisma.substitute.findUnique({ where: { id: existing.subId } });
-    if (sub?.email !== check.session.user.email) {
+    if (!sameEmail(sub?.email, check.session.user.email)) {
       return NextResponse.json({ error: "Not your request." }, { status: 403 });
     }
   }

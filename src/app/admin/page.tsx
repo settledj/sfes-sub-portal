@@ -10,7 +10,7 @@ export default async function AdminPage() {
   if (!session?.user?.email) redirect("/signin");
   if (session.user.role !== "admin") redirect("/");
 
-  const admin = await prisma.admin.findUnique({ where: { email: session.user.email } });
+  const admin = await prisma.admin.findFirst({ where: { email: { equals: session.user.email, mode: "insensitive" } } });
   if (!admin) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.cream }}>

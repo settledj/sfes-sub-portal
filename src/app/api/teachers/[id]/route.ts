@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/authz";
+import { requireRole, sameEmail } from "@/lib/authz";
 import { serializeTeacher } from "@/lib/serialize";
 
 // Teacher-editable fields: photo (via EditableAvatar) and their own notification preferences.
@@ -12,7 +12,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   if (check.session.user.role === "teacher") {
     const target = await prisma.teacher.findUnique({ where: { id: Number(id) } });
-    if (target?.email !== check.session.user.email) {
+    if (!sameEmail(target?.email, check.session.user.email)) {
       return NextResponse.json({ error: "Not your profile." }, { status: 403 });
     }
   }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAnySession, teacherOwnsBooking, subOwnsBooking, type Session } from "@/lib/authz";
+import { requireAnySession, teacherOwnsBooking, subOwnsBooking, sameEmail, type Session } from "@/lib/authz";
 import { serializeMessage } from "@/lib/serialize";
 import { logNotification } from "@/lib/notify";
 import { newMessageEmail } from "@/lib/emailTemplates";
@@ -54,7 +54,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   ]);
 
   const senderName =
-    role === "teacher" ? teacher?.name : role === "substitute" ? sub?.name : (await prisma.admin.findUnique({ where: { email } }))?.name;
+    role === "teacher" ? teacher?.name : role === "substitute" ? sub?.name : (await prisma.admin.findFirst({ where: { email: { equals: email, mode: "insensitive" } } }))?.name;
 
   const message = await prisma.message.create({
     data: { requestId: id, senderRole: role, senderName: senderName || email, body: text },
@@ -70,7 +70,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const admins = await prisma.admin.findMany();
   for (const admin of admins) {
-    if (role === "admin" && admin.email === email) continue;
+    if (role === "admin" && sameEmail(admin.email, email)) continue;
     recipients.push({ record: admin, portalPath: "/admin" });
   }
 

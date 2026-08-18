@@ -11,7 +11,7 @@ export default async function SubPage() {
   if (!session?.user?.email) redirect("/signin");
   if (session.user.role !== "substitute") redirect("/");
 
-  const sub = await prisma.substitute.findUnique({ where: { email: session.user.email } });
+  const sub = await prisma.substitute.findFirst({ where: { email: { equals: session.user.email, mode: "insensitive" } } });
   if (!sub) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.cream }}>
