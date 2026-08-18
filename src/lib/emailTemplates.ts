@@ -242,6 +242,25 @@ export function newBookingRequestAdminEmail({
   return { subject, text, html };
 }
 
+export function passwordResetEmail({
+  toName,
+  resetUrl,
+}: {
+  toName: string;
+  resetUrl: string;
+}): EmailContent {
+  const subject = "Reset your SubMe password";
+  const text = `Hi ${toName}, reset your password here: ${resetUrl} — This link expires in 1 hour. If you didn't request this, you can ignore this email.`;
+  const html = shell(
+    subject,
+    `<p>Hi ${escapeHtml(toName)},</p>
+<p>Click below to set a new password. This link expires in 1 hour.</p>
+<div style="margin:22px 0 8px;">${solidButton("Reset password", resetUrl, C.navy)}</div>
+<p style="font-size:13px;color:${C.grey};">If you didn't request this, you can safely ignore this email — your password won't change.</p>`
+  );
+  return { subject, text, html };
+}
+
 export function newMessageEmail({
   toName,
   senderName,

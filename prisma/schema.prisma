@@ -182,6 +182,11 @@ model AllowedUser {
   // Only set for people without a Google account (password-fallback sign-in).
   // Google-auth users have this null — see src/lib/auth.ts's Credentials provider.
   passwordHash String?
+  // Self-service "forgot password" — set when a reset email is requested,
+  // cleared the moment it's used (single-use) or replaced by a newer request.
+  // See src/lib/passwordSetup.ts.
+  resetToken          String?   @unique
+  resetTokenExpiresAt DateTime?
   createdAt    DateTime    @default(now())
 
   @@map("allowed_users")

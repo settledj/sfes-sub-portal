@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth, signIn } from "@/lib/auth";
-import { createFirstPassword } from "@/lib/passwordSetup";
+import { createFirstPassword, requestPasswordReset } from "@/lib/passwordSetup";
 import { signinUrl } from "@/lib/signinUrl";
 import { C } from "@/lib/constants";
 import { SchoolLogo } from "@/components/shared/SchoolLogo";
@@ -18,12 +18,14 @@ const errorMessages: Record<string, string> = {
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; error?: string; new?: string }>;
+  searchParams: Promise<{ from?: string; error?: string; new?: string; forgot?: string; sent?: string }>;
 }) {
-  const { from, error, new: isNew } = await searchParams;
+  const { from, error, new: isNew, forgot, sent } = await searchParams;
 
   const session = await auth();
   if (session?.user?.email) redirect(from || "/");
+
+  const title = sent ? "Check your email" : forgot ? "Reset your password" : isNew ? "Create your password" : "Sign in to SubMe";
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.cream, fontFamily: "PT Serif, serif" }}>
@@ -33,11 +35,14 @@ export default async function SignInPage({
             <SchoolLogo height={40} />
           </div>
           <p className="text-center font-bold text-lg" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
-            {isNew ? "Create your password" : "Sign in to SubMe"}
+            {title}
           </p>
           <p className="text-center text-xs mb-5" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
-            The St. Francis Episcopal School substitute portal. Access is limited to approved staff and
-            substitutes.
+            {sent
+              ? "If that email has an account, we've sent a link to reset the password. It expires in 1 hour."
+              : forgot
+              ? "Enter your email and we'll send you a link to set a new password."
+              : "The St. Francis Episcopal School substitute portal. Access is limited to approved staff and substitutes."}
           </p>
 
           {error && (
@@ -46,44 +51,21 @@ export default async function SignInPage({
             </p>
           )}
 
-          <form
-            action={async () => {
-              "use server";
-              await signIn("google", { redirectTo: from || "/" });
-            }}
-          >
-            <button
-              type="submit"
-              className="w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2"
-              style={{ backgroundColor: "white", color: "#3F4552", border: "1.5px solid #D9DCE3", fontFamily: "Barlow, sans-serif" }}
+          {sent ? (
+            <a
+              href={signinUrl(from, {})}
+              className="block text-center w-full py-2.5 rounded-lg text-sm font-semibold text-white"
+              style={{ backgroundColor: C.navy, fontFamily: "Barlow, sans-serif" }}
             >
-              <GoogleIcon />
-              Sign in with Google
-            </button>
-          </form>
-
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px" style={{ backgroundColor: "#E3E5EA" }} />
-            <span className="text-xs" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>or</span>
-            <div className="flex-1 h-px" style={{ backgroundColor: "#E3E5EA" }} />
-          </div>
-
-          {isNew ? (
+              Back to sign in
+            </a>
+          ) : forgot ? (
             <form
               action={async (formData) => {
                 "use server";
                 const email = String(formData.get("email") || "");
-                const password = String(formData.get("password") || "");
-                const confirmPassword = String(formData.get("confirmPassword") || "");
-
-                if (password !== confirmPassword) {
-                  redirect(signinUrl(from, { new: "1", error: "Mismatch" }));
-                }
-                const result = await createFirstPassword(email, password);
-                if (!result.ok) {
-                  redirect(signinUrl(from, { new: "1", error: result.error }));
-                }
-                await signIn("credentials", { email, password, redirectTo: from || "/" });
+                await requestPasswordReset(email);
+                redirect(signinUrl(from, { forgot: "1", sent: "1" }));
               }}
             >
               <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
@@ -97,85 +79,159 @@ export default async function SignInPage({
                 className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
                 style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
               />
-              <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
-                New password
-              </label>
-              <input
-                type="password"
-                name="password"
-                required
-                minLength={8}
-                placeholder="At least 8 characters"
-                className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
-                style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
-              />
-              <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
-                Confirm password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                required
-                minLength={8}
-                placeholder="Same as above"
-                className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
-                style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
-              />
               <button
                 type="submit"
                 className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
                 style={{ backgroundColor: C.navy, fontFamily: "Barlow, sans-serif" }}
               >
-                Create password &amp; sign in
+                Send reset link
               </button>
+              <p className="text-center text-xs mt-3" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
+                <a href={signinUrl(from, {})} style={{ color: C.blue }}>Back to sign in</a>
+              </p>
             </form>
           ) : (
-            <form
-              action={async (formData) => {
-                "use server";
-                formData.set("redirectTo", from || "/");
-                await signIn("credentials", formData);
-              }}
-            >
-              <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                required
-                placeholder="you@example.com"
-                className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
-                style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
-              />
-              <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                required
-                placeholder="••••••••"
-                className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
-                style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
-              />
-              <button
-                type="submit"
-                className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
-                style={{ backgroundColor: C.navy, fontFamily: "Barlow, sans-serif" }}
+            <>
+              <form
+                action={async () => {
+                  "use server";
+                  await signIn("google", { redirectTo: from || "/" });
+                }}
               >
-                Sign in
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2"
+                  style={{ backgroundColor: "white", color: "#3F4552", border: "1.5px solid #D9DCE3", fontFamily: "Barlow, sans-serif" }}
+                >
+                  <GoogleIcon />
+                  Sign in with Google
+                </button>
+              </form>
+
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px" style={{ backgroundColor: "#E3E5EA" }} />
+                <span className="text-xs" style={{ color: C.grey, fontFamily: "Barlow, sans-serif" }}>or</span>
+                <div className="flex-1 h-px" style={{ backgroundColor: "#E3E5EA" }} />
+              </div>
+            </>
           )}
 
-          <p className="text-center text-xs mt-3" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
-            {isNew ? (
-              <a href={signinUrl(from, {})} style={{ color: C.blue }}>Already have a password? Sign in</a>
-            ) : (
-              <>No Google account? <a href={signinUrl(from, { new: "1" })} style={{ color: C.blue }}>Create a password</a></>
-            )}
-          </p>
+          {!forgot && !sent && (
+            <>
+              {isNew ? (
+                <form
+                  action={async (formData) => {
+                    "use server";
+                    const email = String(formData.get("email") || "");
+                    const password = String(formData.get("password") || "");
+                    const confirmPassword = String(formData.get("confirmPassword") || "");
+
+                    if (password !== confirmPassword) {
+                      redirect(signinUrl(from, { new: "1", error: "Mismatch" }));
+                    }
+                    const result = await createFirstPassword(email, password);
+                    if (!result.ok) {
+                      redirect(signinUrl(from, { new: "1", error: result.error }));
+                    }
+                    await signIn("credentials", { email, password, redirectTo: from || "/" });
+                  }}
+                >
+                  <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="you@example.com"
+                    className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
+                    style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
+                  />
+                  <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                    New password
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    minLength={8}
+                    placeholder="At least 8 characters"
+                    className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
+                    style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
+                  />
+                  <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                    Confirm password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    required
+                    minLength={8}
+                    placeholder="Same as above"
+                    className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
+                    style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
+                  />
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
+                    style={{ backgroundColor: C.navy, fontFamily: "Barlow, sans-serif" }}
+                  >
+                    Create password &amp; sign in
+                  </button>
+                </form>
+              ) : (
+                <form
+                  action={async (formData) => {
+                    "use server";
+                    formData.set("redirectTo", from || "/");
+                    await signIn("credentials", formData);
+                  }}
+                >
+                  <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="you@example.com"
+                    className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
+                    style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
+                  />
+                  <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    placeholder="••••••••"
+                    className="w-full text-sm rounded-lg border p-2.5 outline-none mb-3"
+                    style={{ borderColor: "#D9DCE3", color: "#3F4552", fontFamily: "Barlow, sans-serif" }}
+                  />
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
+                    style={{ backgroundColor: C.navy, fontFamily: "Barlow, sans-serif" }}
+                  >
+                    Sign in
+                  </button>
+                </form>
+              )}
+
+              <p className="text-center text-xs mt-3" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
+                {isNew ? (
+                  <a href={signinUrl(from, {})} style={{ color: C.blue }}>Already have a password? Sign in</a>
+                ) : (
+                  <>
+                    No Google account? <a href={signinUrl(from, { new: "1" })} style={{ color: C.blue }}>Create a password</a>
+                    <br />
+                    <a href={signinUrl(from, { forgot: "1" })} style={{ color: C.blue }}>Forgot your password?</a>
+                  </>
+                )}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
