@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Bell, PlusCircle, ShieldCheck } from "lucide-react";
+import { Search, Bell, PlusCircle, ShieldCheck, MessageCircle } from "lucide-react";
 import { C } from "@/lib/constants";
 import { addDays, dateKey } from "@/lib/dates";
 import { isRequestable } from "@/lib/availability";
@@ -12,6 +12,7 @@ import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { AdminNewBooking, type NewBookingPrefill } from "@/components/admin/AdminNewBooking";
 import { AdminAccess, type AllowedUserRow } from "@/components/admin/AdminAccess";
 import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
+import { MessagesInboxModal } from "@/components/shared/MessagesInboxModal";
 import type { Sub, Teacher, Booking, Notification } from "@/lib/types";
 
 export function AdminPortal({
@@ -55,6 +56,7 @@ export function AdminPortal({
   const [prefill, setPrefill] = useState<NewBookingPrefill | null>(null);
   const [openBookingId, setOpenBookingId] = useState<string | null>(null);
   const openBooking = requests.find((r) => r.id === openBookingId);
+  const [showMessages, setShowMessages] = useState(false);
 
   const [viewMode, setViewMode] = useState<AdminViewMode>("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -98,7 +100,8 @@ export function AdminPortal({
 
   return (
     <div>
-      <div className="flex items-center rounded-lg p-1 bg-white border mb-6 w-fit flex-wrap" style={{ borderColor: "#E3E5EA" }}>
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-6">
+      <div className="flex items-center rounded-lg p-1 bg-white border w-fit flex-wrap" style={{ borderColor: "#E3E5EA" }}>
         <button
           onClick={() => setTab("people")}
           className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold"
@@ -127,6 +130,15 @@ export function AdminPortal({
         >
           <ShieldCheck size={14} /> Access
         </button>
+      </div>
+
+      <button
+        onClick={() => setShowMessages(true)}
+        className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg bg-white"
+        style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: "1.5px solid #D9DCE3" }}
+      >
+        <MessageCircle size={14} /> Messages
+      </button>
       </div>
 
       <div className="mb-8 pb-8" style={{ borderBottom: "1px solid #E3E5EA" }}>
@@ -184,6 +196,17 @@ export function AdminPortal({
           onCancel={onCancel}
           onRespond={(id, accept) => (accept ? onApprove(id) : onDecline(id))}
           onSubmitFeedback={onSubmitFeedback}
+        />
+      )}
+
+      {showMessages && (
+        <MessagesInboxModal
+          requests={requests}
+          subs={subs}
+          teachers={teachers}
+          role="admin"
+          onClose={() => setShowMessages(false)}
+          onOpenBooking={setOpenBookingId}
         />
       )}
     </div>

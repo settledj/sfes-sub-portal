@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, Bell } from "lucide-react";
+import { LogOut, Bell, MessageCircle } from "lucide-react";
 import { C } from "@/lib/constants";
 import { EditableAvatar } from "@/components/shared/Avatar";
 import { NotificationPreferences } from "@/components/shared/NotificationPreferences";
+import { MessagesInboxModal } from "@/components/shared/MessagesInboxModal";
 import { TeacherDashboard } from "@/components/teacher/TeacherDashboard";
 import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
 import type { Sub, Teacher, Booking } from "@/lib/types";
@@ -40,6 +41,7 @@ export function TeacherPortal({
 }) {
   const [openBookingId, setOpenBookingId] = useState<string | null>(null);
   const [showPreferences, setShowPreferences] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
   const openBooking = requests.find((r) => r.id === openBookingId);
 
   return (
@@ -53,6 +55,13 @@ export function TeacherPortal({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowMessages(true)}
+            className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
+            style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: "1.5px solid #D9DCE3" }}
+          >
+            <MessageCircle size={14} /> Messages
+          </button>
           <button
             onClick={() => setShowPreferences((v) => !v)}
             className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
@@ -102,6 +111,18 @@ export function TeacherPortal({
           onSaveDetails={updateRequestDetails}
           onReassign={reassignBooking}
           onCancel={cancelRequest}
+        />
+      )}
+
+      {showMessages && (
+        <MessagesInboxModal
+          requests={requests}
+          subs={subs}
+          teachers={[teacher]}
+          role="teacher"
+          myTeacherId={teacher.id}
+          onClose={() => setShowMessages(false)}
+          onOpenBooking={setOpenBookingId}
         />
       )}
     </div>

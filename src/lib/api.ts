@@ -79,6 +79,10 @@ export function fetchMessages(requestId: string) {
   return json<Message[]>(fetch(`/api/requests/${requestId}/messages`));
 }
 
+export function fetchAllMessages() {
+  return json<Message[]>(fetch("/api/messages"));
+}
+
 export function sendMessage(requestId: string, body: string) {
   return json<Message>(post(`/api/requests/${requestId}/messages`, { body }));
 }

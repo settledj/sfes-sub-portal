@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, Star, Phone, Mail, Grid3x3, ClipboardList, ChevronLeft, ChevronRight, Check, Ban, Bell } from "lucide-react";
+import { LogOut, Star, Phone, Mail, Grid3x3, ClipboardList, ChevronLeft, ChevronRight, Check, Ban, Bell, MessageCircle } from "lucide-react";
 import { C, SUBJECTS, DIVISIONS, BOOKING_STATUS_META } from "@/lib/constants";
 import { dateKey, dkToDate, prettyDate } from "@/lib/dates";
 import { effectiveStatus } from "@/lib/availability";
@@ -9,6 +9,7 @@ import { EditableAvatar } from "@/components/shared/Avatar";
 import { EditableField } from "@/components/shared/EditableField";
 import { SubjectChip } from "@/components/shared/SubjectChip";
 import { NotificationPreferences } from "@/components/shared/NotificationPreferences";
+import { MessagesInboxModal } from "@/components/shared/MessagesInboxModal";
 import { SubDayModal } from "@/components/sub/SubDayModal";
 import { BookingDetailModal } from "@/components/shared/BookingDetailModal";
 import type { Sub, Teacher, Booking } from "@/lib/types";
@@ -46,6 +47,7 @@ export function SubPortal({
   const [calendarViewMode, setCalendarViewMode] = useState<"month" | "list">("month");
   const [listStatusFilter, setListStatusFilter] = useState("all");
   const [showPreferences, setShowPreferences] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
 
   const myRequests = requests.filter((r) => r.subId === sub.id).sort((a, b) => (a.dk > b.dk ? 1 : -1));
   const openBooking = myRequests.find((r) => r.id === openBookingId);
@@ -90,6 +92,13 @@ export function SubPortal({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowMessages(true)}
+            className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
+            style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: `1.5px solid #D9DCE3` }}
+          >
+            <MessageCircle size={14} /> Messages
+          </button>
           <button
             onClick={() => setShowPreferences((v) => !v)}
             className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
@@ -432,6 +441,18 @@ export function SubPortal({
           onClose={() => setOpenBookingId(null)}
           onRespond={respondRequest}
           onSubmitFeedback={onSubmitFeedback}
+        />
+      )}
+
+      {showMessages && (
+        <MessagesInboxModal
+          requests={requests}
+          subs={[sub]}
+          teachers={teachers}
+          role="substitute"
+          mySubId={sub.id}
+          onClose={() => setShowMessages(false)}
+          onOpenBooking={setOpenBookingId}
         />
       )}
     </div>
