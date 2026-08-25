@@ -97,6 +97,7 @@ const BODY_HTML = `<script>document.documentElement.classList.add('js');</script
     padding: 0.75rem 1.4rem;
     border-radius: 999px;
     text-decoration: none;
+    white-space: nowrap;
     border: 1px solid transparent;
     transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
     cursor: pointer;
@@ -121,6 +122,19 @@ const BODY_HTML = `<script>document.documentElement.classList.add('js');</script
   }
   .brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
   .brand-word { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; color: var(--ink); }
+  /* The flattened wordmark asset has fixed dark-navy lettering baked in, so
+     it only reads on a light ground — swap to the icon + live (theme-aware)
+     text below on a dark ground rather than let the brand disappear. */
+  .brand-lockup-dark { display: none; align-items: center; gap: 0.6rem; }
+  .brand-lockup-light img { display: block; width: auto; }
+  header.site .brand-lockup-light img { height: 28px; }
+  footer.site .brand-lockup-light img { height: 24px; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .brand-lockup-light { display: none; }
+    :root:not([data-theme="light"]) .brand-lockup-dark { display: flex; }
+  }
+  :root[data-theme="dark"] .brand-lockup-light { display: none; }
+  :root[data-theme="dark"] .brand-lockup-dark { display: flex; }
   .nav-links { display: flex; align-items: center; gap: 2rem; }
   .nav-links a { text-decoration: none; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 500; letter-spacing: 0.04em; color: var(--slate); }
   .nav-links a:hover { color: var(--accent); }
@@ -313,8 +327,7 @@ const BODY_HTML = `<script>document.documentElement.classList.add('js');</script
 <header class="site">
   <div class="wrap nav-row">
     <a class="brand" href="#top" aria-label="SubMe home">
-      <img src="/subme-icon.png" alt="" width="30" height="30" style="border-radius:8px">
-      <span class="brand-word">SubMe</span>
+      <span class="brand-lockup-light"><img src="/subme-wordmark.png" alt="SubMe" height="28"></span><span class="brand-lockup-dark"><img src="/subme-icon.png" alt="" width="30" height="30" style="border-radius:8px"><span class="brand-word">SubMe</span></span>
     </a>
     <nav class="nav-links">
       <a href="#how">How it works</a>
@@ -322,6 +335,7 @@ const BODY_HTML = `<script>document.documentElement.classList.add('js');</script
       <a href="#contact">Contact</a>
     </nav>
     <div class="nav-cta">
+      <a class="btn btn-ghost" href="https://subme.app/signin">School login</a>
       <a class="btn btn-primary" href="#contact">Request a demo</a>
     </div>
   </div>
@@ -330,7 +344,7 @@ const BODY_HTML = `<script>document.documentElement.classList.add('js');</script
 <main id="top">
   <div class="wrap hero">
     <div>
-      <p class="eyebrow">Substitute coverage, simplified</p>
+      <p class="eyebrow">Substitutes, simplified</p>
       <h1>The right person.<br><em>When it matters.</em></h1>
       <p class="hero-sub">SubMe fills an empty classroom in minutes, not phone calls. Request coverage, get a real answer from a real substitute, and know before the first bell rings.</p>
       <div class="hero-actions">
@@ -492,8 +506,7 @@ const BODY_HTML = `<script>document.documentElement.classList.add('js');</script
     <div class="foot-row">
       <div>
         <a class="brand" href="#top" aria-label="SubMe home">
-          <img src="/subme-icon.png" alt="" width="26" height="26" style="border-radius:7px">
-          <span class="brand-word">SubMe</span>
+          <span class="brand-lockup-light"><img src="/subme-wordmark.png" alt="SubMe" height="24"></span><span class="brand-lockup-dark"><img src="/subme-icon.png" alt="" width="26" height="26" style="border-radius:7px"><span class="brand-word">SubMe</span></span>
         </a>
         <p class="foot-tag">The right person. When it matters.</p>
       </div>
