@@ -23,7 +23,7 @@ export default async function SignInPage({
   const { from, error, new: isNew, forgot, sent } = await searchParams;
 
   const session = await auth();
-  if (session?.user?.email) redirect(from || "/");
+  if (session?.user?.email) redirect(from || "/stfrancishouston");
 
   const title = sent ? "Check your email" : forgot ? "Reset your password" : isNew ? "Create your password" : "Sign in to SubMe";
 
@@ -95,7 +95,7 @@ export default async function SignInPage({
               <form
                 action={async () => {
                   "use server";
-                  await signIn("google", { redirectTo: from || "/" });
+                  await signIn("google", { redirectTo: from || "/stfrancishouston" });
                 }}
               >
                 <button
@@ -133,7 +133,7 @@ export default async function SignInPage({
                     if (!result.ok) {
                       redirect(signinUrl(from, { new: "1", error: result.error }));
                     }
-                    await signIn("credentials", { email, password, redirectTo: from || "/" });
+                    await signIn("credentials", { email, password, redirectTo: from || "/stfrancishouston" });
                   }}
                 >
                   <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>
@@ -183,7 +183,7 @@ export default async function SignInPage({
                 <form
                   action={async (formData) => {
                     "use server";
-                    formData.set("redirectTo", from || "/");
+                    formData.set("redirectTo", from || "/stfrancishouston");
                     await signIn("credentials", formData);
                   }}
                 >

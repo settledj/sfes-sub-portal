@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       dateLabel,
       subjectLine: subject,
       gradeLine: grade,
-      respondUrl: `${getAppUrl()}/respond/${respondToken}`,
+      respondUrl: `${getAppUrl()}/stfrancishouston/respond/${respondToken}`,
     });
     await logNotification(prisma, {
       event: "request_sent",

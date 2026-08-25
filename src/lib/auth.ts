@@ -41,8 +41,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   pages: {
-    signIn: "/signin",
-    error: "/signin",
+    signIn: "/stfrancishouston/signin",
+    error: "/stfrancishouston/signin",
   },
   callbacks: {
     // Reject sign-in for any email not on the allowlist — this is what makes

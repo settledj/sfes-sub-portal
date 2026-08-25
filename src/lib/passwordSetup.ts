@@ -48,7 +48,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
   await prisma.allowedUser.update({ where: { id: allowed.id }, data: { resetToken, resetTokenExpiresAt } });
 
   const toName = await displayNameFor(normalized, allowed.role);
-  const content = passwordResetEmail({ toName, resetUrl: `${getAppUrl()}/reset-password/${resetToken}` });
+  const content = passwordResetEmail({ toName, resetUrl: `${getAppUrl()}/stfrancishouston/reset-password/${resetToken}` });
   await logNotification(prisma, {
     event: "password_reset_requested",
     toName,

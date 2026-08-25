@@ -51,7 +51,7 @@ export function SubPortalClient({ sub }: { sub: Sub }) {
         const updated = await api.submitFeedback(id, subFeedback);
         setState((s) => ({ ...s, requests: s.requests.map((r) => (r.id === id ? updated : r)) }));
       }}
-      onLogout={() => signOut({ callbackUrl: "/signin" })}
+      onLogout={() => signOut({ callbackUrl: "/stfrancishouston/signin" })}
       onUpdateProfile={async (updates) => {
         const updated = await api.updateSubProfile(liveSub.id, updates);
         setState((s) => ({ ...s, subs: s.subs.map((sb) => (sb.id === liveSub.id ? updated : sb)) }));

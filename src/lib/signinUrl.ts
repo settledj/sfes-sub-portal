@@ -7,5 +7,5 @@ export function signinUrl(from: string | undefined, extra: Record<string, string
   if (from) params.set("from", from);
   for (const [k, v] of Object.entries(extra)) if (v) params.set(k, v);
   const s = params.toString();
-  return s ? `/signin?${s}` : "/signin";
+  return s ? `/stfrancishouston/signin?${s}` : "/stfrancishouston/signin";
 }

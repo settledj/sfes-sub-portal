@@ -8,8 +8,8 @@ import { SubPortalClient } from "@/components/sub/SubPortalClient";
 
 export default async function SubPage() {
   const session = await auth();
-  if (!session?.user?.email) redirect("/signin");
-  if (session.user.role !== "substitute") redirect("/");
+  if (!session?.user?.email) redirect("/stfrancishouston/signin");
+  if (session.user.role !== "substitute") redirect("/stfrancishouston");
 
   const sub = await prisma.substitute.findFirst({ where: { email: { equals: session.user.email, mode: "insensitive" } } });
   if (!sub) {

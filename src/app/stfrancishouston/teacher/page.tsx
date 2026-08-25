@@ -8,8 +8,8 @@ import { TeacherPortalClient } from "@/components/teacher/TeacherPortalClient";
 
 export default async function TeacherPage() {
   const session = await auth();
-  if (!session?.user?.email) redirect("/signin");
-  if (session.user.role !== "teacher") redirect("/");
+  if (!session?.user?.email) redirect("/stfrancishouston/signin");
+  if (session.user.role !== "teacher") redirect("/stfrancishouston");
 
   const teacher = await prisma.teacher.findFirst({ where: { email: { equals: session.user.email, mode: "insensitive" } } });
   if (!teacher) {

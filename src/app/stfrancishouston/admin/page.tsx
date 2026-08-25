@@ -7,8 +7,8 @@ import { AdminPortalClient } from "@/components/admin/AdminPortalClient";
 
 export default async function AdminPage() {
   const session = await auth();
-  if (!session?.user?.email) redirect("/signin");
-  if (session.user.role !== "admin") redirect("/");
+  if (!session?.user?.email) redirect("/stfrancishouston/signin");
+  if (session.user.role !== "admin") redirect("/stfrancishouston");
 
   const admin = await prisma.admin.findFirst({ where: { email: { equals: session.user.email, mode: "insensitive" } } });
   if (!admin) {

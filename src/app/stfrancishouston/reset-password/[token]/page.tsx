@@ -43,7 +43,7 @@ export default async function ResetPasswordPage({
                 It&apos;s expired or has already been used. Request a new one from the sign-in page.
               </p>
               <a
-                href="/signin?forgot=1"
+                href="/stfrancishouston/signin?forgot=1"
                 className="block text-center w-full py-2.5 rounded-lg text-sm font-semibold text-white mt-4"
                 style={{ backgroundColor: C.navy, fontFamily: "Barlow, sans-serif" }}
               >
@@ -78,7 +78,7 @@ export default async function ResetPasswordPage({
                   if (!result.ok) {
                     redirect(`/reset-password/${token}?error=${result.error}`);
                   }
-                  await signIn("credentials", { email: result.email, password, redirectTo: "/" });
+                  await signIn("credentials", { email: result.email, password, redirectTo: "/stfrancishouston" });
                 }}
               >
                 <label className="text-xs font-semibold block mb-1.5" style={{ color: C.navy, fontFamily: "Barlow, sans-serif" }}>

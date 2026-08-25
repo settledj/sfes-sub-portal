@@ -53,7 +53,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         requesterName,
         otherName,
         dateLabel: when,
-        portalUrl: `${getAppUrl()}/admin`,
+        portalUrl: `${getAppUrl()}/stfrancishouston/admin`,
       });
       return logNotification(prisma, {
         event: "cancellation_requested_admin",

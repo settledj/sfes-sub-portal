@@ -56,7 +56,7 @@ export function AdminPortalClient({ adminId, adminName }: { adminId: number; adm
           </div>
         </div>
         <button
-          onClick={() => signOut({ callbackUrl: "/signin" })}
+          onClick={() => signOut({ callbackUrl: "/stfrancishouston/signin" })}
           className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
           style={{ color: C.navy, fontFamily: "Barlow, sans-serif", border: "1.5px solid #D9DCE3" }}
         >

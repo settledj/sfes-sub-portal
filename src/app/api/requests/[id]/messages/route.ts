@@ -65,13 +65,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // ones they're already part of).
   const dateLabel = prettyDate(dkToDate(existing!.dk));
   const recipients: { record: { name: string; email: string; phone: string; notifyMessages: boolean }; portalPath: string }[] = [];
-  if (role !== "teacher" && teacher) recipients.push({ record: teacher, portalPath: "/teacher" });
-  if (role !== "substitute" && sub) recipients.push({ record: sub, portalPath: "/sub" });
+  if (role !== "teacher" && teacher) recipients.push({ record: teacher, portalPath: "/stfrancishouston/teacher" });
+  if (role !== "substitute" && sub) recipients.push({ record: sub, portalPath: "/stfrancishouston/sub" });
 
   const admins = await prisma.admin.findMany();
   for (const admin of admins) {
     if (role === "admin" && sameEmail(admin.email, email)) continue;
-    recipients.push({ record: admin, portalPath: "/admin" });
+    recipients.push({ record: admin, portalPath: "/stfrancishouston/admin" });
   }
 
   await Promise.all(
