@@ -12,7 +12,11 @@ export const metadata: Metadata = {
 // next/font — that's what actually registers those names browser-wide.
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full">
+    // suppressHydrationWarning: the /schools marketing page adds a "js" class
+    // to <html> via an inline script (progressive-enhancement flag for its
+    // scroll-reveal animation) — expected, harmless client-side mutation that
+    // would otherwise log a false-positive hydration mismatch on every page.
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
