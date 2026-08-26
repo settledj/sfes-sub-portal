@@ -347,7 +347,7 @@ const BODY_HTML = `<script>document.documentElement.classList.add('js');</script
     <div>
       <p class="eyebrow">Substitutes, simplified</p>
       <h1>The right person.<br><em>When it matters.</em></h1>
-      <p class="hero-sub">SubMe fills an empty classroom in minutes, not phone calls. Request coverage, get a real answer from a real substitute, and know before the first bell rings.</p>
+      <p class="hero-sub">SubMe fills an empty classroom in minutes&mdash;no phone calls, no texts&mdash;just the click of a button! Request coverage, get a real answer from a real substitute, and know before the first bell rings.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#contact">Request a demo</a>
         <a class="btn btn-ghost" href="#how">See how it works</a>
