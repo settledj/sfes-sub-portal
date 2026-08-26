@@ -29,8 +29,35 @@ export function AdminSubModal({
     return d;
   });
   const [pickedDate, setPickedDate] = useState(new Date());
+  const [statusFilter, setStatusFilter] = useState("active");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-  const mine = requests.filter((r) => r.subId === sub.id && r.status !== "cancelled").sort((a, b) => (a.dk > b.dk ? 1 : -1));
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const parseInputDate = (value: string) => {
+    const [y, m, d] = value.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  };
+  const fromDate = dateFrom ? parseInputDate(dateFrom) : null;
+  const toDate = dateTo ? parseInputDate(dateTo) : null;
+
+  const mine = requests
+    .filter((r) => r.subId === sub.id)
+    .filter((r) => {
+      if (statusFilter === "active" && r.status === "cancelled") return false;
+      if (statusFilter === "confirmed" && !(r.status === "accepted" && dkToDate(r.dk) >= todayStart)) return false;
+      if (statusFilter === "completed" && !(r.status === "accepted" && dkToDate(r.dk) < todayStart)) return false;
+      if (["pending", "declined", "cancelled"].includes(statusFilter) && r.status !== statusFilter) return false;
+      return true;
+    })
+    .filter((r) => {
+      const d = dkToDate(r.dk);
+      if (fromDate && d < fromDate) return false;
+      if (toDate && d > toDate) return false;
+      return true;
+    })
+    .sort((a, b) => (a.dk > b.dk ? 1 : -1));
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: "rgba(27,42,83,0.55)" }} onClick={onClose}>
@@ -98,8 +125,43 @@ export function AdminSubModal({
               <PlusCircle size={13} /> Manually book
             </button>
           </div>
+
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="text-xs px-2 py-1.5 rounded-lg border outline-none"
+              style={{ borderColor: "#D9DCE3", color: C.navy, fontFamily: "Barlow, sans-serif" }}
+            >
+              <option value="active">Active (hide cancelled)</option>
+              <option value="all">All bookings</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed (upcoming)</option>
+              <option value="completed">Completed (past)</option>
+              <option value="declined">Declined</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              aria-label="From date"
+              className="text-xs px-2 py-1.5 rounded-lg border outline-none"
+              style={{ borderColor: "#D9DCE3", color: C.navy, fontFamily: "Barlow, sans-serif" }}
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              aria-label="To date"
+              className="text-xs px-2 py-1.5 rounded-lg border outline-none"
+              style={{ borderColor: "#D9DCE3", color: C.navy, fontFamily: "Barlow, sans-serif" }}
+            />
+          </div>
           {mine.length === 0 ? (
-            <p className="text-sm" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>No bookings on record.</p>
+            <p className="text-sm" style={{ color: C.grey, fontFamily: "PT Serif, serif" }}>
+              {requests.some((r) => r.subId === sub.id) ? "No bookings match this filter." : "No bookings on record."}
+            </p>
           ) : (
             <div className="flex flex-col gap-2">
               {mine.map((r) => {
