@@ -120,13 +120,14 @@ const BODY_HTML = `<script>document.documentElement.classList.add('js');</script
     padding-top: 1.1rem; padding-bottom: 1.1rem;
     gap: 1.5rem;
   }
-  .brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+  .brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; flex-shrink: 0; }
   .brand-word { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; color: var(--ink); }
   /* The flattened wordmark asset has fixed dark-navy lettering baked in, so
      it only reads on a light ground — swap to the icon + live (theme-aware)
      text below on a dark ground rather than let the brand disappear. */
-  .brand-lockup-dark { display: none; align-items: center; gap: 0.6rem; }
-  .brand-lockup-light img { display: block; width: auto; }
+  .brand-lockup-dark { display: none; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+  .brand-lockup-light { flex-shrink: 0; }
+  .brand-lockup-light img { display: block; width: auto; flex-shrink: 0; object-fit: contain; }
   header.site .brand-lockup-light img { height: 28px; }
   footer.site .brand-lockup-light img { height: 24px; }
   @media (prefers-color-scheme: dark) {

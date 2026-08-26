@@ -59,8 +59,8 @@ export default function LoginPage() {
         }
         .login-page * { box-sizing: border-box; }
         .login-nav { padding: 1.5rem clamp(1.25rem, 4vw, 3rem); }
-        .login-brand { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--ink); }
-        .login-brand img { display: block; height: 26px; width: auto; }
+        .login-brand { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--ink); flex-shrink: 0; }
+        .login-brand img { display: block; height: 26px; width: auto; flex-shrink: 0; object-fit: contain; }
         .login-brand-word { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
         .login-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem clamp(1.25rem, 4vw, 3rem) 4rem; }
         .login-card { width: 100%; max-width: 26rem; }
